@@ -1,11 +1,9 @@
-package com.aiscaffolder.application.service;
+package com.aiscaffolder.project_template_engine.application.service;
 
-import com.aiscaffolder.domain.model.*;
-import com.github.mustachejava.DefaultMustacheFactory;
+import com.aiscaffolder.project_template_engine.domain.model.ProjectMetaData;
+import com.aiscaffolder.project_template_engine.domain.model.ProjectTemplate;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.*;

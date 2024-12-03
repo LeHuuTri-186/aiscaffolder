@@ -1,4 +1,4 @@
-package com.aiscaffolder.config;
+package com.aiscaffolder.project_template_engine.config;
 
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.MustacheFactory;

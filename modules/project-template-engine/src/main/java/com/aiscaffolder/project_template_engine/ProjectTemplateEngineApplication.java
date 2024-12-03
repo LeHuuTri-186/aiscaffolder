@@ -1,15 +1,14 @@
 package com.aiscaffolder.project_template_engine;
 
-import com.aiscaffolder.application.usecase.ProjectGenerationUseCase;
-import com.aiscaffolder.domain.model.ProjectDependency;
-import com.aiscaffolder.domain.model.ProjectMetaData;
+import com.aiscaffolder.project_template_engine.application.usecase.ProjectGenerationUseCase;
+import com.aiscaffolder.project_template_engine.domain.model.ProjectDependency;
+import com.aiscaffolder.project_template_engine.domain.model.ProjectMetaData;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 @SpringBootApplication(scanBasePackages = "com.aiscaffolder")
 public class ProjectTemplateEngineApplication implements CommandLineRunner {
@@ -23,6 +22,14 @@ public class ProjectTemplateEngineApplication implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 		// Define project metadata
+		List<ProjectDependency> dependencies = List.of(
+				ProjectDependency.builder()
+						.groupId("org.springframework.boot")
+						.artifactId("spring-boot-starter-web")
+						.version("3.4.0")
+						.build()
+		);
+
 		ProjectMetaData metaData = ProjectMetaData.builder()
 				.projectName("SampleProject")
 				.basePackage("com.example.sample")
@@ -30,18 +37,10 @@ public class ProjectTemplateEngineApplication implements CommandLineRunner {
 				.version("1.0.0")
 				.groupId("com.example")
 				.artifactId("sample-project")
-				.springBootVersion("3.0.0")
+				.springBootVersion("3.4.0")
 				.javaVersion("17")
-				.buildTool("Maven")
-				.dependencies(List.of(
-						new ProjectDependency("org.springframework.boot", "spring-boot-starter-web", "3.0.0"),
-						new ProjectDependency("org.springframework.boot", "spring-boot-starter-data-jpa", "3.0.0")
-				))
-				.createdBy("John Doe")
-				.contactEmail("john.doe@example.com")
-				.organization("Example Corp")
+				.dependencies(dependencies)
 				.createdOn(LocalDateTime.now())
-				.customProperties(Map.of("database", "H2"))
 				.build();
 
 		// Output directory for generated project

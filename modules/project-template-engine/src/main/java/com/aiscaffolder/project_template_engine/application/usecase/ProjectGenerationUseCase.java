@@ -1,7 +1,8 @@
-package com.aiscaffolder.application.usecase;
+package com.aiscaffolder.project_template_engine.application.usecase;
 
-import com.aiscaffolder.application.service.ProjectGenerationService;
-import com.aiscaffolder.domain.model.*;
+import com.aiscaffolder.project_template_engine.application.service.ProjectGenerationService;
+import com.aiscaffolder.project_template_engine.domain.model.ProjectMetaData;
+import com.aiscaffolder.project_template_engine.domain.model.ProjectTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;

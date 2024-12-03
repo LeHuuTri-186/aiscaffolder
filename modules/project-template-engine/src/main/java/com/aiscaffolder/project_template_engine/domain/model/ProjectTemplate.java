@@ -1,4 +1,4 @@
-package com.aiscaffolder.domain.model;
+package com.aiscaffolder.project_template_engine.domain.model;
 
 import lombok.*;
 
