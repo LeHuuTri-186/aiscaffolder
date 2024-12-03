@@ -1,0 +1,23 @@
+<project>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>{{groupId}}</groupId>
+    <artifactId>{{artifactId}}</artifactId>
+    <version>{{version}}</version>
+    <description>{{projectDescription}}</description>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>{{springBootVersion}}</version>
+    </parent>
+    <dependencies>
+        {{#dependencies}}
+            <dependency>
+                <groupId>{{groupId}}</groupId>
+                <artifactId>{{artifactId}}</artifactId>
+                {{#version}}
+                    <version>{{version}}</version>
+                {{/version}}
+            </dependency>
+        {{/dependencies}}
+    </dependencies>
+</project>
