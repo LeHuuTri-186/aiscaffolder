@@ -1,5 +1,6 @@
 package com.aiscaffolder.project_template_engine.application.usecase;
 
+import com.aiscaffolder.project_template_engine.application.EntityData;
 import com.aiscaffolder.project_template_engine.application.service.ProjectGenerationService;
 import com.aiscaffolder.project_template_engine.domain.model.ProjectMetaData;
 import com.aiscaffolder.project_template_engine.domain.model.ProjectTemplate;
@@ -24,7 +25,7 @@ public class ProjectGenerationUseCase {
      * @param outputDirectory The directory where the project should be created.
      * @throws Exception if project generation fails.
      */
-    public void execute(ProjectMetaData metaData, String outputDirectory) throws Exception {
+    public void execute(ProjectMetaData metaData, String outputDirectory, String entitiesFilePath) throws Exception {
         // Define a sample ProjectTemplate using a mutable map
         Map<String, String> files = new HashMap<>();
         files.put("pom.xml", "pom.xml");  // `pom.xml.mustache` template generates `pom.xml`
@@ -55,6 +56,6 @@ public class ProjectGenerationUseCase {
         System.out.println(files);
 
         // Generate the project
-        projectGenerationService.generateProject(projectTemplate, metaData, outputDirectory);
+        projectGenerationService.generateProject(projectTemplate, metaData, outputDirectory, entitiesFilePath);
     }
 }

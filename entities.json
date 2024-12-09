@@ -1,0 +1,19 @@
+{
+  "entities": [
+    {
+      "name": "Blog",
+      "fields": [
+        { "name": "name", "type": "String", "required": true },
+        { "name": "handle", "type": "String", "required": true, "unique": true }
+      ]
+    },
+    {
+      "name": "Post",
+      "fields": [
+        { "name": "title", "type": "String", "required": true },
+        { "name": "content", "type": "String" },
+        { "name": "date", "type": "Instant" }
+      ]
+    }
+  ]
+}

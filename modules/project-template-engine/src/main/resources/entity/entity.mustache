@@ -1,0 +1,34 @@
+package {{basePackage}};
+
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+
+@Entity
+public class {{className}} {
+
+    {{#fields}}
+    @Column
+    private {{type}} {{name}};
+
+    {{#required}}
+    @NotNull
+    {{/required}}
+
+    {{#unique}}
+    @Column(unique = true)
+    {{/unique}}
+
+    {{/fields}}
+
+    // Getter and Setter methods
+    {{#fields}}
+    public {{type}} get{{name[0] | upper}}{{name[1..]}}() {
+        return {{name}};
+    }
+
+    public void set{{name[0] | upper}}{{name[1..]}}({{type}} {{name}}) {
+        this.{{name}} = {{name}};
+    }
+    {{/fields}}
+
+}

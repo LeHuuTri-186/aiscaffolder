@@ -46,10 +46,14 @@ public class ProjectTemplateEngineApplication implements CommandLineRunner {
 		// Output directory for generated project
 		String outputDirectory = "output/sample-project";
 
-		// Execute project generation
-		projectGenerationUseCase.execute(metaData, outputDirectory);
+		// Path to the JSON file containing entity data
+		String jsonFilePath = "entities.json";
 
-		System.out.println("Project generated successfully at: " + outputDirectory);
+		// Execute project generation
+		projectGenerationUseCase.execute(metaData, outputDirectory, jsonFilePath);
+
+		System.out.println("Project and entities generated successfully at: " + outputDirectory);
+
 	}
 
     public static void main(String[] args) {

@@ -1,5 +1,6 @@
 package com.aiscaffolder.project_template_engine.application.service;
 
+import com.aiscaffolder.project_template_engine.application.usecase.EntityGenerator;
 import com.aiscaffolder.project_template_engine.domain.model.ProjectMetaData;
 import com.aiscaffolder.project_template_engine.domain.model.ProjectTemplate;
 import com.github.mustachejava.Mustache;
@@ -47,7 +48,7 @@ public class ProjectGenerationService {
      * @param outputDir       the directory where the project will be generated
      * @throws Exception if any errors occur during generation
      */
-    public void generateProject(ProjectTemplate projectTemplate, ProjectMetaData metaData, String outputDir) throws Exception {
+    public void generateProject(ProjectTemplate projectTemplate, ProjectMetaData metaData, String outputDir,  String entitiesFilePath) throws Exception {
 
         for (Map.Entry<String, String> fileEntry : projectTemplate.getFiles().entrySet()) {
             // Resolve placeholders in file paths and template names
@@ -63,7 +64,42 @@ public class ProjectGenerationService {
             writeFile(outputDir, relativeFilePath, fileContent);
             generateMavenWrapper(outputDir);
         }
+        // Tạo entity class từ file JSON
+        generateEntitiesFromJson(entitiesFilePath, outputDir, metaData);
     }
+
+    /**
+     * Phương thức này tạo các entity classes từ file JSON.
+     * @param entitiesFilePath Đường dẫn đến file JSON chứa thông tin các entities.
+     * @param outputDir Thư mục đầu ra.
+     * @throws Exception Nếu có lỗi khi tạo entity.
+     */
+    public void generateEntitiesFromJson(String entitiesFilePath, String outputDir, ProjectMetaData metaData) throws Exception {
+        // Đọc và phân tích file JSON
+        EntityGenerator.EntityData entityData = EntityGenerator.parseJson(entitiesFilePath);
+
+        // Tạo entity class cho từng entity trong file JSON
+        for (EntityGenerator.Entity entity : entityData.entities) {
+            generateEntityClass(entity, outputDir, metaData);
+        }
+    }
+
+
+    private void generateEntityClass(EntityGenerator.Entity entity, String outputDir, ProjectMetaData metaData) throws Exception {
+        // Định nghĩa dữ liệu template cho entity
+        Map<String, Object> templateData = Map.of(
+                "className", entity.name,
+                "basePackage", metaData.getBasePackage(), // Thêm basePackage vào template data
+                "fields", entity.fields
+        );
+
+        // Render template cho entity class
+        String entityContent = renderEntityTemplate("classpath:/entity/entity.mustache", templateData);
+
+        // Ghi nội dung vào file entity class
+        writeFile(outputDir, "src/main/java/" + metaData.getBasePackage().replace('.', '/') + "/" + entity.name + ".java", entityContent);
+    }
+
 
     /**
      * Renders a Mustache template with the given metadata.
@@ -72,11 +108,11 @@ public class ProjectGenerationService {
      * @param metaData     the metadata to pass to the template
      * @return the rendered template content as a string
      */
-    private String renderTemplate(String templateName, ProjectMetaData metaData) {
+    public String renderTemplate(String templateName, ProjectMetaData metaData) {
         try {
             // Ensure the resolved template name ends with ".mustache"
             String resolvedTemplateName = templateName.endsWith(".mustache") ? templateName : templateName + ".mustache";
-
+            System.out.println(resolvedTemplateName);
             // Debug log for resolved template name
 
             Mustache mustache = mustacheFactory.compile(resolvedTemplateName);
@@ -90,6 +126,26 @@ public class ProjectGenerationService {
     }
 
     /**
+     * Render một Mustache template cho entity với dữ liệu dạng Map.
+     * @param templateName Tên của template cần render.
+     * @param templateData Dữ liệu cần thay thế vào template.
+     * @return Nội dung đã render.
+     */
+    public String renderEntityTemplate(String templateName, Map<String, Object> templateData) {
+        try {
+            String resolvedTemplateName = templateName.endsWith(".mustache") ? templateName : templateName + ".mustache";
+            System.out.println("Entity: " + resolvedTemplateName);
+            Mustache mustache = mustacheFactory.compile(resolvedTemplateName);
+            StringWriter writer = new StringWriter();
+            mustache.execute(writer, templateData).flush();
+            return writer.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to render entity template: " + templateName, e);
+        }
+    }
+
+
+    /**
      * Writes content to a file, creating directories if necessary.
      *
      * @param outputDir      the base output directory
@@ -97,10 +153,11 @@ public class ProjectGenerationService {
      * @param fileContent    the content to write to the file
      * @throws Exception if file writing fails
      */
-    private void writeFile(String outputDir, String relativePath, String fileContent) throws Exception {
+    public void writeFile(String outputDir, String relativePath, String fileContent) throws Exception {
         Path filePath = Path.of(outputDir, relativePath);
         Files.createDirectories(filePath.getParent());
         Files.writeString(filePath, fileContent);
+        System.out.println(relativePath + '\n'+ fileContent);
     }
 
     private void generateMavenWrapper(String outputDir) throws Exception {
