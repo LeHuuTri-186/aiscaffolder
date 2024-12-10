@@ -16,13 +16,6 @@ public class EntityGenerator {
         public List<Field> fields;
     }
 
-    public static class Field {
-        public String name;
-        public String type;
-        public Boolean required;
-        public Boolean unique;
-    }
-
     /**
      * Phương thức phân tích (parse) file JSON thành đối tượng EntityData
      * @param jsonFilePath Đường dẫn đến file JSON

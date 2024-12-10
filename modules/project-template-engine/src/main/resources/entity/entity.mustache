@@ -7,26 +7,19 @@ import javax.validation.constraints.NotNull;
 public class {{className}} {
 
     {{#fields}}
-    @Column
+    {{#required}}@NotNull{{/required}}
+    @Column{{#unique}}(unique = true){{/unique}}
     private {{type}} {{name}};
-
-    {{#required}}
-    @NotNull
-    {{/required}}
-
-    {{#unique}}
-    @Column(unique = true)
-    {{/unique}}
 
     {{/fields}}
 
     // Getter and Setter methods
     {{#fields}}
-    public {{type}} get{{name[0] | upper}}{{name[1..]}}() {
+    public {{type}} get{{nameCapitalized}}() {
         return {{name}};
     }
 
-    public void set{{name[0] | upper}}{{name[1..]}}({{type}} {{name}}) {
+    public void set{{nameCapitalized}}({{type}} {{name}}) {
         this.{{name}} = {{name}};
     }
     {{/fields}}

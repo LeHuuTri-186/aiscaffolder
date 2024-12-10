@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 
 @Service
@@ -69,6 +70,30 @@ public class ProjectGenerationService {
     }
 
     /**
+     * Generate CRUD Controllers for each entity.
+     * @param outputDir The output directory where the controller will be generated.
+     * @param entity The entity information (name, fields, etc.)
+     * @param basePackage The base package of the application.
+     * @throws Exception If file write or template render errors occur.
+     */
+    public void generateCRUDControllers(String outputDir, EntityGenerator.Entity entity, ProjectMetaData metaData) throws Exception {
+        // Prepare data for Mustache template
+        Map<String, Object> templateData = new HashMap<>();
+
+        templateData.put("className", entity.name);
+        templateData.put("classNameLowercase", entity.name.substring(0, 1).toLowerCase() + entity.name.substring(1));
+        templateData.put("basePackage", metaData.getBasePackage());
+        templateData.put("fields", entity.fields); // Pass the list of fields to the template
+
+        // Render the CRUD controller using the Mustache template
+        String controllerContent = renderEntityTemplate("classpath:/templates/spring-boot/controller.mustache", templateData);
+
+        // Write the controller to the appropriate file location
+        String controllerFilePath = "src/main/java/" + metaData.getBasePackage().replace(".", "/") + "/controller/" + entity.name + "Controller.java";
+        writeFile(outputDir, controllerFilePath, controllerContent);
+    }
+
+    /**
      * Phương thức này tạo các entity classes từ file JSON.
      * @param entitiesFilePath Đường dẫn đến file JSON chứa thông tin các entities.
      * @param outputDir Thư mục đầu ra.
@@ -81,6 +106,7 @@ public class ProjectGenerationService {
         // Tạo entity class cho từng entity trong file JSON
         for (EntityGenerator.Entity entity : entityData.entities) {
             generateEntityClass(entity, outputDir, metaData);
+            generateCRUDControllers(outputDir, entity, metaData);
         }
     }
 
@@ -99,7 +125,6 @@ public class ProjectGenerationService {
         // Ghi nội dung vào file entity class
         writeFile(outputDir, "src/main/java/" + metaData.getBasePackage().replace('.', '/') + "/" + entity.name + ".java", entityContent);
     }
-
 
     /**
      * Renders a Mustache template with the given metadata.
@@ -157,7 +182,7 @@ public class ProjectGenerationService {
         Path filePath = Path.of(outputDir, relativePath);
         Files.createDirectories(filePath.getParent());
         Files.writeString(filePath, fileContent);
-        System.out.println(relativePath + '\n'+ fileContent);
+        System.out.println(relativePath);
     }
 
     private void generateMavenWrapper(String outputDir) throws Exception {
