@@ -1,18 +1,15 @@
-package com.aiscaffolder.project_template_engine.domain.model;
+package com.aiscaffolder.project_template_engine.domain.model.dto;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-
-@Getter
-@Setter
+@Data
 @Builder
-@ToString
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProjectMetaData {
+public class ProjectMetaDataDto {
     private String artifactId;
     private String basePackage;
     private String description;

@@ -1,5 +1,8 @@
-package com.aiscaffolder.project_template_engine.domain.model;
+package com.aiscaffolder.project_template_engine.domain.model.dto;
 
+import com.aiscaffolder.project_template_engine.domain.model.DataSource;
+import com.aiscaffolder.project_template_engine.domain.model.ProjectDependency;
+import com.aiscaffolder.project_template_engine.domain.model.ProjectMetaData;
 import lombok.*;
 
 import java.util.List;
@@ -11,7 +14,7 @@ import java.util.Map;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProjectTemplate {
+public class ProjectTemplateDto {
     private String activeProfile;
     private String buildTool;
     private String createdBy;

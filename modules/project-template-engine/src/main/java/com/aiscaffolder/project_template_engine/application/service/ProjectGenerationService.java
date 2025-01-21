@@ -9,7 +9,10 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.EnumSet;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class ProjectGenerationService {
@@ -20,16 +23,9 @@ public class ProjectGenerationService {
         this.mustacheFactory = mustacheFactory;
     }
 
-    /**
-     * Resolves placeholders in a file path, such as {{mainClassName}}, with values from metadata.
-     *
-     * @param path     the original file path with placeholders
-     * @param metaData the metadata containing values to replace placeholders
-     * @return the resolved file path
-     */
     private String resolvePlaceholders(String path, ProjectMetaData metaData) {
         if (path.contains("{{mainClassName}}")) {
-            path = path.replace("{{mainClassName}}", metaData.getMainClassName());
+            path = path.replace("{{mainClassName}}", metaData.getProjectName() + "Application");
         }
         if (path.contains("{{basePackagePath}}")) {
             String basePackagePath = metaData.getBasePackage().replace('.', '/');
@@ -38,41 +34,28 @@ public class ProjectGenerationService {
         return path;
     }
 
+    public void generateProject(ProjectTemplate template, String outputDir, Map<String, String> files) throws Exception {
 
-    /**
-     * Generates a project structure based on the given template and metadata.
-     *
-     * @param projectTemplate the project template with file mappings
-     * @param metaData        the metadata to populate templates
-     * @param outputDir       the directory where the project will be generated
-     * @throws Exception if any errors occur during generation
-     */
-    public void generateProject(ProjectTemplate projectTemplate, ProjectMetaData metaData, String outputDir) throws Exception {
-
-        for (Map.Entry<String, String> fileEntry : projectTemplate.getFiles().entrySet()) {
+        for (Map.Entry<String, String> fileEntry : files.entrySet()) {
             // Resolve placeholders in file paths and template names
-            String relativeFilePath = resolvePlaceholders(fileEntry.getKey(), metaData);
+            String relativeFilePath = resolvePlaceholders(fileEntry.getKey(), template.getProjectMetaData());
             String templateName = fileEntry.getValue();
 
             System.out.println(templateName);
 
             // Render the template
-            String fileContent = renderTemplate("classpath:/templates/spring-boot/" + templateName, metaData);
+            String fileContent = renderTemplate("classpath:/templates/spring-boot/" + templateName, template);
 
             // Write the rendered content to the resolved file path
             writeFile(outputDir, relativeFilePath, fileContent);
-            generateMavenWrapper(outputDir);
+
+            Path baseDir = Path.of(outputDir);
+            Path mvnwPath = baseDir.resolve("mvnw");
+            setExecutable(mvnwPath);
         }
     }
 
-    /**
-     * Renders a Mustache template with the given metadata.
-     *
-     * @param templateName the name of the template to render
-     * @param metaData     the metadata to pass to the template
-     * @return the rendered template content as a string
-     */
-    private String renderTemplate(String templateName, ProjectMetaData metaData) {
+    private String renderTemplate(String templateName, ProjectTemplate template) {
         try {
             // Ensure the resolved template name ends with ".mustache"
             String resolvedTemplateName = templateName.endsWith(".mustache") ? templateName : templateName + ".mustache";
@@ -81,7 +64,7 @@ public class ProjectGenerationService {
 
             Mustache mustache = mustacheFactory.compile(resolvedTemplateName);
             try (StringWriter writer = new StringWriter()) {
-                mustache.execute(writer, metaData).flush();
+                mustache.execute(writer, template).flush();
                 return writer.toString();
             }
         } catch (Exception e) {
@@ -89,25 +72,27 @@ public class ProjectGenerationService {
         }
     }
 
-    /**
-     * Writes content to a file, creating directories if necessary.
-     *
-     * @param outputDir      the base output directory
-     * @param relativePath   the file's relative path
-     * @param fileContent    the content to write to the file
-     * @throws Exception if file writing fails
-     */
     private void writeFile(String outputDir, String relativePath, String fileContent) throws Exception {
         Path filePath = Path.of(outputDir, relativePath);
         Files.createDirectories(filePath.getParent());
         Files.writeString(filePath, fileContent);
     }
 
-    private void generateMavenWrapper(String outputDir) throws Exception {
-        Path baseDir = Path.of(outputDir);
-
-        // Write mvnw (Linux/macOS)
-        Path mvnwPath = baseDir.resolve("mvnw");
-        mvnwPath.toFile().setExecutable(true);
+    private void setExecutable(Path path) throws Exception {
+        try {
+            Set<PosixFilePermission> permissions = EnumSet.of(
+                    PosixFilePermission.OWNER_EXECUTE,
+                    PosixFilePermission.OWNER_READ,
+                    PosixFilePermission.OWNER_WRITE,
+                    PosixFilePermission.GROUP_EXECUTE,
+                    PosixFilePermission.GROUP_READ,
+                    PosixFilePermission.OTHERS_EXECUTE,
+                    PosixFilePermission.OTHERS_READ
+            );
+            Files.setPosixFilePermissions(path, permissions);
+        } catch (UnsupportedOperationException e) {
+            // Fallback for non-POSIX systems (Windows)
+            var b = path.toFile().setExecutable(true);
+        }
     }
 }

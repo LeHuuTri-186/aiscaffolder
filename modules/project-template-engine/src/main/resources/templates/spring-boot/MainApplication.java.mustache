@@ -1,11 +1,11 @@
-package {{basePackage}};
+package {{projectMetaData.basePackage}};
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class {{mainClassName}} {
+public class {{projectMetaData.projectName}}Application {
     public static void main(String[] args) {
-        SpringApplication.run({{mainClassName}}.class, args);
+        SpringApplication.run({{projectMetaData.projectName}}Application.class, args);
     }
 }
