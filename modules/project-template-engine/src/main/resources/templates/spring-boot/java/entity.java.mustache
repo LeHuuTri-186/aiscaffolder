@@ -1,0 +1,84 @@
+package {{config.packageName}}.domain;
+
+import jakarta.persistence.*;
+import java.util.*;
+
+@Entity
+public class {{entity.entityName}} {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+{{#entity.entityFields}}
+    private {{fieldType}} {{fieldName}};
+{{/entity.entityFields}}
+
+    public {{entity.entityName}}() {}
+
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+{{#entity.entityFields}}
+    public {{fieldType}} get{{fieldNameUpper}}() {
+        return {{fieldName}};
+    }
+
+    public void set{{fieldNameUpper}}({{fieldType}} {{fieldName}}) {
+        this.{{fieldName}} = {{fieldName}};
+    }
+{{/entity.entityFields}}
+
+
+{{#relationships}}
+    {{#isOneToMany}}
+        @OneToMany(mappedBy = "{{targetEntityVarName}}", cascade = CascadeType.ALL, orphanRemoval = true)
+        private List<{{targetEntity}}> {{targetEntityVarNamePlural}} = new ArrayList<>();
+    {{/isOneToMany}}
+
+    {{#isManyToOne}}
+        @ManyToOne
+        @JoinColumn(name = "{{toEntityField}}", nullable = false)
+        private {{targetEntity}} {{targetEntityVarName}};
+    {{/isManyToOne}}
+{{/relationships}}
+
+{{#entity.entityFields}}
+    public {{fieldType}} get{{fieldNameUpper}}() {
+    return {{fieldName}};
+    }
+
+    public void set{{fieldNameUpper}}({{fieldType}} {{fieldName}}) {
+    this.{{fieldName}} = {{fieldName}};
+    }
+{{/entity.entityFields}}
+
+{{#relationships}}
+    {{#isOneToMany}}
+    public List<{{targetEntity}}> get{{targetEntityVarNameUpperPlural}}() {
+        return {{targetEntityVarNamePlural}};
+    }
+
+    public void set{{targetEntityVarNameUpperPlural}}(List<{{targetEntity}}> {{targetEntityVarNamePlural}}) {
+        this.{{targetEntityVarNamePlural}} = {{targetEntityVarNamePlural}};
+    }
+    {{/isOneToMany}}
+
+    {{#isManyToOne}}
+    public {{targetEntity}} get{{targetEntityVarNameUpper}}() {
+        return {{targetEntityVarName}};
+    }
+
+    public void set{{targetEntityVarNameUpper}}({{targetEntity}} {{targetEntityVarName}}) {
+        this.{{targetEntityVarName}} = {{targetEntityVarName}};
+    }
+    {{/isManyToOne}}
+{{/relationships}}
+
+}
