@@ -2,8 +2,6 @@ package com.aiscaffolder.projecttemplateengine.application.service;
 
 import com.aiscaffolder.projecttemplateengine.domain.entities.*;
 import com.aiscaffolder.projecttemplateengine.domain.enums.RelationshipType;
-import com.aiscaffolder.projecttemplateengine.domain.model.ProjectMetaData;
-import com.aiscaffolder.projecttemplateengine.domain.model.ProjectTemplate;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import org.springframework.stereotype.Service;
@@ -14,15 +12,16 @@ import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.*;
 
-import static org.springframework.util.StringUtils.capitalize;
 
 @Service
 public class ProjectGenerationService {
 
     private final MustacheFactory mustacheFactory;
+    private final ZipProjectService zipProjectService;
 
-    public ProjectGenerationService(final MustacheFactory mustacheFactory) {
+    public ProjectGenerationService(final MustacheFactory mustacheFactory, ZipProjectService zipProjectService) {
         this.mustacheFactory = mustacheFactory;
+        this.zipProjectService = zipProjectService;
     }
 
     private String resolvePlaceholders(String path, Configuration config) {
@@ -59,6 +58,8 @@ public class ProjectGenerationService {
         Path baseDir = Path.of(outputDir);
         Path mvnwPath = baseDir.resolve("mvnw");
         setExecutable(mvnwPath);
+
+        zipProjectService.zipProject(outputDir, "output.zip");
     }
 
     private String renderTemplate(String templateName, Object application) {
@@ -95,11 +96,14 @@ public class ProjectGenerationService {
                     + "/domain/" + entity.getEntityName() + ".java";
 
             // Write entity file
+
+            System.out.println(context);
             writeFile(outputDir, entityFilePath, entityContent);
 
             System.out.println("Generated entity: " + entity.getEntityName() + ".java");
         }
     }
+
     private Map<String, Object> prepareEntityContext(Entity entity) {
         Map<String, Object> entityContext = new HashMap<>();
         entityContext.put("entityName", entity.getEntityName());
@@ -121,19 +125,16 @@ public class ProjectGenerationService {
 
     private List<Map<String, Object>> getEntityRelationships(Entity entity, List<Relationship> relationships) {
         List<Map<String, Object>> entityRelationships = new ArrayList<>();
-        // Use a set to track processed self-referencing relationships for the current entity.
         Set<String> processedSelfRefs = new HashSet<>();
 
         for (Relationship rel : relationships) {
             boolean isOwner = rel.getFromEntity().equals(entity.getEntityName());
             boolean isInverse = rel.getToEntity().equals(entity.getEntityName());
 
-            // Skip if the current entity is not involved in this relationship.
             if (!isOwner && !isInverse) {
                 continue;
             }
 
-            // For self-referencing relationships (where both sides are the same), only process once.
             if (rel.getFromEntity().equals(rel.getToEntity())) {
                 String selfKey = rel.getType() + ":" + rel.getFromEntity();
                 if (processedSelfRefs.contains(selfKey)) {
@@ -143,22 +144,29 @@ public class ProjectGenerationService {
                 }
             }
 
+            boolean isBidirectional = (rel.getFromEntityField() == null && rel.getToEntityField() == null) ||
+                    (rel.getFromEntityField() != null && rel.getToEntityField() != null);
+            boolean isUnidirectional = !isBidirectional;
+            boolean isInverseBidirectional = isBidirectional && isInverse; // Inverse side of bidirectional
+
             Map<String, Object> relationshipContext = new HashMap<>();
             relationshipContext.put("type", rel.getType());
             relationshipContext.put("fromEntity", rel.getFromEntity());
             relationshipContext.put("toEntity", rel.getToEntity());
             relationshipContext.put("fromEntityField", rel.getFromEntityField());
             relationshipContext.put("toEntityField", rel.getToEntityField());
+            relationshipContext.put("isBidirectional", isBidirectional && isOwner); // Generate only on owner side
+            relationshipContext.put("isUnidirectional", isUnidirectional);
+            relationshipContext.put("isInverseBidirectional", isInverseBidirectional);
             relationshipContext.put("isOneToMany", rel.getType() == RelationshipType.ONE_TO_MANY);
             relationshipContext.put("isManyToOne", rel.getType() == RelationshipType.MANY_TO_ONE);
             relationshipContext.put("isOneToOne", rel.getType() == RelationshipType.ONE_TO_ONE);
             relationshipContext.put("isManyToMany", rel.getType() == RelationshipType.MANY_TO_MANY);
             relationshipContext.put("isOwner", isOwner);
 
-            // Determine the target entity (the one that is not the current entity).
             String targetEntity = isOwner ? rel.getToEntity() : rel.getFromEntity();
             String targetEntityVarName = Character.toLowerCase(targetEntity.charAt(0)) + targetEntity.substring(1);
-            String targetEntityVarNamePlural = targetEntityVarName + "s"; // Simple pluralization
+            String targetEntityVarNamePlural = targetEntityVarName + "s";
 
             relationshipContext.put("targetEntity", targetEntity);
             relationshipContext.put("targetEntityVarName", targetEntityVarName);
@@ -175,6 +183,7 @@ public class ProjectGenerationService {
     private String capitalize(String str) {
         return Character.toUpperCase(str.charAt(0)) + str.substring(1);
     }
+
 
 
     private void writeFile(String outputDir, String relativePath, String fileContent) throws Exception {

@@ -3,7 +3,6 @@ package com.aiscaffolder.projecttemplateengine.application.usecase;
 import com.aiscaffolder.projecttemplateengine.application.service.ProjectGenerationService;
 import com.aiscaffolder.projecttemplateengine.domain.entities.Application;
 import com.aiscaffolder.projecttemplateengine.domain.entities.Entity;
-import com.aiscaffolder.projecttemplateengine.domain.model.ProjectTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
