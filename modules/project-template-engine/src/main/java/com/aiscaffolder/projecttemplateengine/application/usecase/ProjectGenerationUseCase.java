@@ -1,10 +1,13 @@
 package com.aiscaffolder.projecttemplateengine.application.usecase;
 
+import com.aiscaffolder.projecttemplateengine.application.service.GradleWrapperService;
+import com.aiscaffolder.projecttemplateengine.application.service.MavenWrapperService;
 import com.aiscaffolder.projecttemplateengine.application.service.ProjectGenerationService;
 import com.aiscaffolder.projecttemplateengine.domain.entities.Application;
 import com.aiscaffolder.projecttemplateengine.domain.entities.Entity;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,9 +16,14 @@ import java.util.Map;
 public class ProjectGenerationUseCase {
 
     private final ProjectGenerationService projectGenerationService;
+    private final MavenWrapperService mavenWrapperService;
+    private final GradleWrapperService gradleWrapperService;
 
-    public ProjectGenerationUseCase(ProjectGenerationService projectGenerationService) {
+    public ProjectGenerationUseCase(ProjectGenerationService projectGenerationService, MavenWrapperService mavenWrapperService, GradleWrapperService gradleWrapperService) {
         this.projectGenerationService = projectGenerationService;
+        this.mavenWrapperService = mavenWrapperService;
+        this.gradleWrapperService = gradleWrapperService;
+
     }
 
     public void execute(Application application, String outputDirectory) {
@@ -35,6 +43,27 @@ public class ProjectGenerationUseCase {
 
 
         System.out.println("Generated Files: " + updatedFiles);
+
+        // Generate Maven Wrapper
+        try {
+            if ("maven".equalsIgnoreCase(application.getConfig().getBuildTool())) {
+                mavenWrapperService.generateMavenWrapper(outputDirectory);
+                files.put("pom.xml", "pom.xml.mustache");
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to generate Maven Wrapper", e);
+        }
+
+        // Generate Gradle Wrapper
+        try {
+            if ("gradle".equalsIgnoreCase(application.getConfig().getBuildTool())) {
+                gradleWrapperService.generateGradleWrapper(outputDirectory);
+                files.put("build.gradle", "build.gradle.mustache");
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to generate Gradle Wrapper", e);
+        }
+
         try {
             projectGenerationService.generateProject(application, outputDirectory, updatedFiles);
         } catch (Exception e) {
@@ -46,9 +75,6 @@ public class ProjectGenerationUseCase {
     private void generateProjectFiles(Map<String, String> files, List<Entity> entities) {
         // Java source files
         generateJavaSourceFiles(files);
-
-        // Maven wrapper
-        generateMavenWrapper(files);
 
         // Resources folder
         generateJavaResources(files);
@@ -79,17 +105,11 @@ public class ProjectGenerationUseCase {
     }
 
     private void generateJavaSourceFiles(Map<String, String> files) {
-        files.put("pom.xml", "pom.xml");  // `pom.xml.mustache` template generates `pom.xml`
+        // files.put("pom.xml", "pom.xml");  // `pom.xml.mustache` template generates `pom.xml`
         files.put("src/main/java/{{basePackagePath}}/{{mainClassName}}.java", "MainApplication.java");
     }
 
     private void generateEntityFiles(Map<String, String> files, String entityName) {
         files.put("src/main/java/{{basePackagePath}}/domain/" + entityName + ".java", "entity.java");
-    }
-
-    private void generateMavenWrapper(Map<String, String> files) {
-        files.put("mvnw", "mvnw");
-        files.put("mvnw.cmd", "mvnw.cmd");
-        files.put(".mvn/wrapper/maven-wrapper.properties", "maven-wrapper.properties");
     }
 }

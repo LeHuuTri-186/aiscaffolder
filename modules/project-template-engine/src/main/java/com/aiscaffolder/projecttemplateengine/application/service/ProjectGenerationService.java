@@ -35,6 +35,10 @@ public class ProjectGenerationService {
         return path;
     }
 
+    private String getBuildFile(Application application) {
+        return "maven".equalsIgnoreCase(application.getConfig().getBuildTool()) ? "pom.xml" : "build.gradle";
+    }
+
     public void generateProject(Application application, String outputDir, Map<String, String> files) throws Exception {
 
         for (Map.Entry<String, String> fileEntry : files.entrySet()) {
@@ -55,9 +59,14 @@ public class ProjectGenerationService {
 
         generateEntityFiles(application, outputDir);
 
-        Path baseDir = Path.of(outputDir);
-        Path mvnwPath = baseDir.resolve("mvnw");
-        setExecutable(mvnwPath);
+//        Path baseDir = Path.of(outputDir);
+//        Path mvnwPath = baseDir.resolve("mvnw");
+//        setExecutable(mvnwPath);
+        if ("maven".equalsIgnoreCase(application.getConfig().getBuildTool())) {
+            setExecutable(Path.of(outputDir, "mvnw"));
+        } else if ("gradle".equalsIgnoreCase(application.getConfig().getBuildTool())) {
+            setExecutable(Path.of(outputDir, "gradlew"));
+        }
 
         zipProjectService.zipProject(outputDir, "output.zip");
     }

@@ -32,6 +32,9 @@ public class ProjectGenerationController {
     @PostMapping("/generate")
     public ResponseEntity<Resource> generateProject(@RequestBody ApplicationDto applicationDto) {
         System.out.println(applicationDto.toString());
+        if (applicationDto.getConfig().getBuildTool() == null || applicationDto.getConfig().getBuildTool().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
         System.out.println(mapper.mapFrom(applicationDto));
         projectGenerationUseCase.execute(mapper.mapFrom(applicationDto), "output");
         String zipFilePath = "output.zip";

@@ -1,0 +1,38 @@
+plugins {
+id 'org.springframework.boot' version '{{config.springBootVersion}}'
+id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+id 'java'
+}
+
+group = '{{config.group}}'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '{{config.javaVersion}}'
+
+repositories {
+mavenCentral()
+}
+
+dependencies {
+implementation 'org.springframework.boot:spring-boot-starter-web'
+implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+testImplementation 'org.springframework.boot:spring-boot-starter-test'
+{{#dependencies}}
+    implementation '{{groupId}}:{{artifactId}}:{{version}}'
+{{/dependencies}}
+}
+
+test {
+useJUnitPlatform()
+}
+
+bootJar {
+baseName = '{{config.artifact}}'
+version =  version
+}
+
+dependencyManagement {
+imports {
+mavenBom "org.springframework.boot:spring-boot-dependencies:{{config.springBootVersion}}"
+}
+}
