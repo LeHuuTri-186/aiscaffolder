@@ -84,11 +84,6 @@ public class ProjectGenerationUseCase {
 
         // Git
         generateGitFiles(files);
-
-        // entities
-        for (Entity entity : entities) {
-            generateEntityFiles(files, entity.getEntityName());
-        }
     }
 
     private void generateTestFiles(Map<String, String> files) {

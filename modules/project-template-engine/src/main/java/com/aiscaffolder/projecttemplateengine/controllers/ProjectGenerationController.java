@@ -4,6 +4,7 @@ import com.aiscaffolder.projecttemplateengine.application.usecases.ProjectGenera
 import com.aiscaffolder.projecttemplateengine.domain.dto.ApplicationDto;
 import com.aiscaffolder.projecttemplateengine.domain.entities.Application;
 import com.aiscaffolder.projecttemplateengine.mappers.Mapper;
+import jakarta.validation.Valid;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -27,12 +28,12 @@ public class ProjectGenerationController {
     }
 
     @PostMapping("/generate")
-    public ResponseEntity<Resource> generateProject(@RequestBody ApplicationDto applicationDto) {
-        System.out.println(applicationDto.toString());
-        if (applicationDto.getConfig().getBuildTool() == null || applicationDto.getConfig().getBuildTool().isEmpty()) {
+    public ResponseEntity<Resource> generateProject(@Valid @RequestBody ApplicationDto applicationDto) {
+        if (applicationDto.getConfig().getBuildTool() == null
+                || applicationDto.getConfig().getBuildTool().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
-        System.out.println(mapper.mapFrom(applicationDto));
+
         projectGenerationUseCase.execute(mapper.mapFrom(applicationDto), "output");
         String zipFilePath = "output.zip";
         File zipFile = new File(zipFilePath);

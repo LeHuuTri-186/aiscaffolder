@@ -1,9 +1,11 @@
 package com.aiscaffolder.projecttemplateengine.domain.dto;
 
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -12,18 +14,9 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ApplicationDto {
+    @Valid
     private ConfigurationDto config;
     private List<EntityDto> entities;
     private List<RelationshipDto> relationships;
     private List<DependencyDto> dependencies;
-
-    @Override
-    public String toString() {
-        return "ApplicationDto{" +
-                "config=" + config +
-                ", entities=" + entities +
-                ", relationships=" + relationships +
-                ", dependencies=" + dependencies +
-                '}';
-    }
 }
