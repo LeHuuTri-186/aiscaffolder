@@ -1,11 +1,10 @@
-package com.aiscaffolder.projecttemplateengine.application.service;
+package com.aiscaffolder.projecttemplateengine.application.services;
 
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
-import java.nio.file.*;
 
 @Service
 public class MavenWrapperService {

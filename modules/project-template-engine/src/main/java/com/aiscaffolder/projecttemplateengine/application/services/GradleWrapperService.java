@@ -1,4 +1,4 @@
-package com.aiscaffolder.projecttemplateengine.application.service;
+package com.aiscaffolder.projecttemplateengine.application.services;
 
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
