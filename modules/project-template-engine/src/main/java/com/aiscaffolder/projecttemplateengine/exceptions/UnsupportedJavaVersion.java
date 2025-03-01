@@ -1,0 +1,12 @@
+package com.aiscaffolder.projecttemplateengine.exceptions;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class UnsupportedJavaVersion extends RuntimeException {
+    public UnsupportedJavaVersion(String message) {}
+}

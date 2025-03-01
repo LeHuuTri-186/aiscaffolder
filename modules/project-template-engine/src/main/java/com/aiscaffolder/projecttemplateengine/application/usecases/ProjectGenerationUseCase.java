@@ -5,6 +5,7 @@ import com.aiscaffolder.projecttemplateengine.application.services.MavenWrapperS
 import com.aiscaffolder.projecttemplateengine.application.services.ProjectGenerationService;
 import com.aiscaffolder.projecttemplateengine.domain.entities.Application;
 import com.aiscaffolder.projecttemplateengine.domain.entities.Entity;
+import com.aiscaffolder.projecttemplateengine.domain.enums.BuildTool;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -46,7 +47,7 @@ public class ProjectGenerationUseCase {
 
         // Generate Maven Wrapper
         try {
-            if ("maven".equalsIgnoreCase(application.getConfig().getBuildTool())) {
+            if (application.getConfig().getBuildTool() == BuildTool.MAVEN) {
                 mavenWrapperService.generateMavenWrapper(outputDirectory);
                 files.put("pom.xml", "pom.xml.mustache");
             }
@@ -56,7 +57,7 @@ public class ProjectGenerationUseCase {
 
         // Generate Gradle Wrapper
         try {
-            if ("gradle".equalsIgnoreCase(application.getConfig().getBuildTool())) {
+            if (application.getConfig().getBuildTool() == BuildTool.GRADLE) {
                 gradleWrapperService.generateGradleWrapper(outputDirectory);
                 files.put("build.gradle", "build.gradle.mustache");
             }

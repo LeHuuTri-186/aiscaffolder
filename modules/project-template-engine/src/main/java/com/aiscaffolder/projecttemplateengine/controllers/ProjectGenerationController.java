@@ -3,8 +3,10 @@ package com.aiscaffolder.projecttemplateengine.controllers;
 import com.aiscaffolder.projecttemplateengine.application.usecases.ProjectGenerationUseCase;
 import com.aiscaffolder.projecttemplateengine.domain.dto.ApplicationDto;
 import com.aiscaffolder.projecttemplateengine.domain.entities.Application;
+import com.aiscaffolder.projecttemplateengine.exceptions.UnsupportedJavaVersion;
 import com.aiscaffolder.projecttemplateengine.mappers.Mapper;
 import jakarta.validation.Valid;
+import org.springframework.boot.system.JavaVersion;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
+import java.util.Arrays;
 
 @RestController
 public class ProjectGenerationController {
@@ -29,10 +32,8 @@ public class ProjectGenerationController {
 
     @PostMapping("/generate")
     public ResponseEntity<Resource> generateProject(@Valid @RequestBody ApplicationDto applicationDto) {
-        if (applicationDto.getConfig().getBuildTool() == null
-                || applicationDto.getConfig().getBuildTool().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        }
+
+        validateJavaVersion(applicationDto.getConfig().getJavaVersion());
 
         projectGenerationUseCase.execute(mapper.mapFrom(applicationDto), "output");
         String zipFilePath = "output.zip";
@@ -53,5 +54,13 @@ public class ProjectGenerationController {
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(resource);
+    }
+
+    private void validateJavaVersion(int javaVersion) {
+        if (javaVersion == 17 || javaVersion == 21 || javaVersion == 23) {
+            return;
+        }
+
+        throw new UnsupportedJavaVersion("Unsupported Java Version: " + javaVersion + ". Supported Java Versions: 17, 21, 23");
     }
 }
