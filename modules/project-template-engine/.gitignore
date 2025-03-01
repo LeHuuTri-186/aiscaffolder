@@ -31,5 +31,7 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+!**/src/main/resouces/.env
+
 ### VS Code ###
 .vscode/

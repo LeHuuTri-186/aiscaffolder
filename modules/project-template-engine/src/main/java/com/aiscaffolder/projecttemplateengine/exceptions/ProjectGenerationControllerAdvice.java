@@ -4,6 +4,7 @@ import com.aiscaffolder.projecttemplateengine.controllers.ProjectGenerationContr
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,22 +20,33 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice(basePackageClasses = ProjectGenerationController.class)
 public class ProjectGenerationControllerAdvice {
-    @Autowired
-    ObjectMapper objectMapper;
+    final ObjectMapper objectMapper;
 
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<Object> enumValidationException(HttpMessageNotReadableException exception) {
-        String errorDetails = "Invalid json format";
-        if (exception.getCause() instanceof InvalidFormatException ifx) {
-            if (ifx.getTargetType() != null && ifx.getTargetType().isEnum()) {
-                errorDetails = String.format("Invalid enum value: '%s' for the field: '%s'. The value must be one of: %s.",
-                        ifx.getValue(), ifx.getPath().getLast().getFieldName(), Arrays.toString(ifx.getTargetType().getEnumConstants()));
-            }
+    public ProjectGenerationControllerAdvice(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
+    @ExceptionHandler(InvalidFormatException.class)
+    public ResponseEntity<Object> enumValidationException(InvalidFormatException exception) {
+        Map<String, String> error = new HashMap<>();
+
+        String errorDetails = "Invalid value: '" + exception.getValue() + "'. Valid values must be of type: " + exception.getTargetType().getTypeName() ;
+        
+        if (exception.getTargetType() != null && exception.getTargetType().isEnum()) {
+
+            errorDetails = String.format("Invalid value: '%s' for the field: '%s'. Valid values are: %s.",
+                    exception.getValue(), exception.getPath().getLast().getFieldName(), Arrays.toString(exception.getTargetType().getEnumConstants()));
+
+            error.put(exception.getPath().getLast().getFieldName(), errorDetails);
         }
 
-        return ResponseEntity.badRequest().body(ApiExceptionResponse.builder().status(HttpStatus.BAD_REQUEST).message(errorDetails).time(LocalDateTime.now()).build());
+        error.put(exception.getPath().getLast().getFieldName(), errorDetails);
+   
+
+        return ResponseEntity.badRequest().body(ApiExceptionResponse.builder().status(HttpStatus.BAD_REQUEST).message(error).time(LocalDateTime.now()).build());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -45,6 +57,14 @@ public class ProjectGenerationControllerAdvice {
         );
 
 
-        return ResponseEntity.badRequest().body(ValidationExceptionResponse.builder().status(HttpStatus.BAD_REQUEST).message(errors).time(LocalDateTime.now()).build());
+        return ResponseEntity.badRequest().body(ApiExceptionResponse.builder().status(HttpStatus.BAD_REQUEST).message(errors).time(LocalDateTime.now()).build());
+    }
+
+    @ExceptionHandler(UnsupportedJavaVersion.class)
+    public ResponseEntity<Object> handleUnsupportedJavaVersion(UnsupportedJavaVersion exception) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put("javaVersion", exception.getMessage());
+
+        return ResponseEntity.badRequest().body(ApiExceptionResponse.builder().status(HttpStatus.BAD_REQUEST).message(errors).time(LocalDateTime.now()).build());
     }
 }

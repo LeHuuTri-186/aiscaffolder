@@ -1,6 +1,7 @@
 package com.aiscaffolder.projecttemplateengine.application.services;
 
 import com.aiscaffolder.projecttemplateengine.domain.entities.*;
+import com.aiscaffolder.projecttemplateengine.domain.enums.BuildTool;
 import com.aiscaffolder.projecttemplateengine.domain.enums.RelationshipType;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
@@ -36,7 +37,7 @@ public class ProjectGenerationService {
     }
 
     private String getBuildFile(Application application) {
-        return "maven".equalsIgnoreCase(application.getConfig().getBuildTool()) ? "pom.xml" : "build.gradle";
+        return application.getConfig().getBuildTool() == BuildTool.MAVEN ? "pom.xml" : "build.gradle";
     }
 
     public void generateProject(Application application, String outputDir, Map<String, String> files) throws Exception {
@@ -62,9 +63,9 @@ public class ProjectGenerationService {
 //        Path baseDir = Path.of(outputDir);
 //        Path mvnwPath = baseDir.resolve("mvnw");
 //        setExecutable(mvnwPath);
-        if ("maven".equalsIgnoreCase(application.getConfig().getBuildTool())) {
+        if (application.getConfig().getBuildTool() == BuildTool.MAVEN) {
             setExecutable(Path.of(outputDir, "mvnw"));
-        } else if ("gradle".equalsIgnoreCase(application.getConfig().getBuildTool())) {
+        } else if (application.getConfig().getBuildTool() == BuildTool.GRADLE) {
             setExecutable(Path.of(outputDir, "gradlew"));
         }
 
