@@ -1,10 +1,12 @@
-package com.aiscaffolder.projecttemplateengine.application.service;
+package com.aiscaffolder.projecttemplateengine.application.services;
 
 import java.io.*;
 import java.nio.file.*;
 import java.util.zip.*;
 
 import org.springframework.stereotype.Service;
+
+import static java.nio.file.Files.walk;
 
 @Service
 public class ZipProjectService {
@@ -13,7 +15,7 @@ public class ZipProjectService {
         Path zipPath = Paths.get(zipFilePath);
         try (ZipOutputStream zipOutputStream = new ZipOutputStream(Files.newOutputStream(zipPath))) {
             Path sourcePath = Paths.get(sourceDirPath);
-            Files.walk(sourcePath)
+            walk(sourcePath)
                     .filter(path -> !Files.isDirectory(path))
                     .forEach(path -> {
                         ZipEntry zipEntry = new ZipEntry(sourcePath.relativize(path).toString());

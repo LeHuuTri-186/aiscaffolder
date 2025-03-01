@@ -13,6 +13,6 @@ public class ProjectTemplateEngineApplication implements CommandLineRunner {
 
     public static void main(String[] args) {
 		SpringApplication.run(ProjectTemplateEngineApplication.class, args);
-	}
 
+	}
 }

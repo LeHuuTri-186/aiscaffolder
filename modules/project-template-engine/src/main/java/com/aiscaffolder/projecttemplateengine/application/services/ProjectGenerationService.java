@@ -1,4 +1,4 @@
-package com.aiscaffolder.projecttemplateengine.application.service;
+package com.aiscaffolder.projecttemplateengine.application.services;
 
 import com.aiscaffolder.projecttemplateengine.domain.entities.*;
 import com.aiscaffolder.projecttemplateengine.domain.enums.RelationshipType;

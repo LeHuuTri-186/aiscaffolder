@@ -1,8 +1,8 @@
-package com.aiscaffolder.projecttemplateengine.application.usecase;
+package com.aiscaffolder.projecttemplateengine.application.usecases;
 
-import com.aiscaffolder.projecttemplateengine.application.service.GradleWrapperService;
-import com.aiscaffolder.projecttemplateengine.application.service.MavenWrapperService;
-import com.aiscaffolder.projecttemplateengine.application.service.ProjectGenerationService;
+import com.aiscaffolder.projecttemplateengine.application.services.GradleWrapperService;
+import com.aiscaffolder.projecttemplateengine.application.services.MavenWrapperService;
+import com.aiscaffolder.projecttemplateengine.application.services.ProjectGenerationService;
 import com.aiscaffolder.projecttemplateengine.domain.entities.Application;
 import com.aiscaffolder.projecttemplateengine.domain.entities.Entity;
 import org.springframework.stereotype.Service;
