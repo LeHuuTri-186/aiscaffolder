@@ -1,6 +1,8 @@
 package com.aiscaffolder.projecttemplateengine.domain.entities;
 
 import com.aiscaffolder.projecttemplateengine.domain.enums.ApplicationType;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.*;
 
 @Builder
@@ -24,4 +26,6 @@ public class Configuration {
     private String artifact;
     private String name;
     private String packageName;
+    private boolean ormEnabled;
+    private boolean lombokEnabled;
 }
