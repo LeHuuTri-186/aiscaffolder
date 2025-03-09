@@ -16,7 +16,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.Arrays;
 
 @RestController
@@ -31,20 +38,33 @@ public class ProjectGenerationController {
     }
 
     @PostMapping("/generate")
-    public ResponseEntity<Resource> generateProject(@Valid @RequestBody ApplicationDto applicationDto) {
+    public ResponseEntity<Resource> generateProject(@Valid @RequestBody ApplicationDto applicationDto) throws IOException {
 
         validateJavaVersion(applicationDto.getConfig().getJavaVersion());
 
-        projectGenerationUseCase.execute(mapper.mapFrom(applicationDto), "output");
-        String zipFilePath = "output.zip";
-        File zipFile = new File(zipFilePath);
+        // Tạo thư mục riêng biệt dựa vào timestamp
+        String timestamp = String.valueOf(System.currentTimeMillis());
+        String outputDirectory = "output/project-" + timestamp;
 
-        if (!zipFile.exists()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(null);
+        Files.createDirectories(Paths.get(outputDirectory));
+
+        projectGenerationUseCase.execute(mapper.mapFrom(applicationDto), outputDirectory);
+        String zipFileName = "output.zip";
+//        Path zipFilePath = Paths.get(outputDir, zipFileName);
+//        String zipFilePath = "output.zip";
+        File zipFile = new File(zipFileName);
+        Path zipFilePath = (Path) Paths.get(outputDirectory, zipFileName);
+
+//        if (!zipFile.exists()) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//                    .body(null);
+//        }
+
+        Resource resource = new FileSystemResource(zipFilePath.toString());
+
+        if (!resource.exists()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-
-        Resource resource = new FileSystemResource(zipFile);
 
         // Set response headers
         HttpHeaders headers = new HttpHeaders();

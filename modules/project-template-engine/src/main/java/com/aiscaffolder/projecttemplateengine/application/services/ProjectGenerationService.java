@@ -11,6 +11,8 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 
@@ -41,7 +43,6 @@ public class ProjectGenerationService {
     }
 
     public void generateProject(Application application, String outputDir, Map<String, String> files) throws Exception {
-
         for (Map.Entry<String, String> fileEntry : files.entrySet()) {
             // Resolve placeholders in file paths and template names
             String relativeFilePath = resolvePlaceholders(fileEntry.getKey(), application.getConfig());
@@ -69,7 +70,9 @@ public class ProjectGenerationService {
             setExecutable(Path.of(outputDir, "gradlew"));
         }
 
-        zipProjectService.zipProject(outputDir, "output.zip");
+        System.out.println(outputDir);
+
+        zipProjectService.zipProject(outputDir, outputDir + "/output.zip");
     }
 
     private String renderTemplate(String templateName, Object application) {
