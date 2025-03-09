@@ -1,0 +1,177 @@
+package {{config.packageName}}.domain;
+
+import jakarta.persistence.*;
+import java.util.*;
+
+@Entity
+public class {{entity.entityName}} {
+
+@Id
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+private Long id;
+
+{{#entity.entityFields}}
+    private {{fieldType}} {{fieldName}};
+{{/entity.entityFields}}
+
+public {{entity.entityName}}() {}
+
+// Getters and Setters
+public Long getId() {
+return id;
+}
+
+public void setId(Long id) {
+this.id = id;
+}
+
+{{#entity.entityFields}}
+    public {{fieldType}} get{{fieldNameUpper}}() {
+    return {{fieldName}};
+    }
+
+    public void set{{fieldNameUpper}}({{fieldType}} {{fieldName}}) {
+    this.{{fieldName}} = {{fieldName}};
+    }
+{{/entity.entityFields}}
+
+{{#relationships}}
+    {{#isOneToMany}}
+        {{#isBidirectional}}
+            @OneToMany(mappedBy = "{{targetEntityVarName}}", cascade = CascadeType.ALL, orphanRemoval = true)
+            private List<{{targetEntity}}> {{targetEntityVarNamePlural}} = new ArrayList<>();
+        {{/isBidirectional}}
+        {{#isUnidirectional}}
+            @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+            @JoinColumn(name = "{{fromEntityField}}")
+            private List<{{targetEntity}}> {{targetEntityVarNamePlural}} = new ArrayList<>();
+        {{/isUnidirectional}}
+    {{/isOneToMany}}
+
+    {{#isManyToOne}}
+        @ManyToOne
+        {{#isUnidirectional}}
+            @JoinColumn(name = "{{toEntityField}}", nullable = false)
+        {{/isUnidirectional}}
+        private {{targetEntity}} {{targetEntityVarName}};
+    {{/isManyToOne}}
+
+    {{#isManyToMany}}
+        {{#isBidirectional}}
+            @ManyToMany
+            @JoinTable(
+            name = "{{fromEntity}}_{{toEntity}}", // Name of the join table
+            joinColumns = @JoinColumn(name = "{{fromEntity}}_id"), // FK for Student
+            inverseJoinColumns = @JoinColumn(name = "{{toEntity}}_id") // FK for Course
+            )
+            private List<{{targetEntity}}> {{targetEntityVarNamePlural}} = new ArrayList<>();
+        {{/isBidirectional}}
+        {{#isUnidirectional}}
+            @ManyToMany
+            @JoinTable(
+            name = "{{entity.entityName}}_{{targetEntity}}",
+            joinColumns = @JoinColumn(name = "{{entity.entityName}}_id"),
+            inverseJoinColumns = @JoinColumn(name = "{{targetEntity}}_id")
+            )
+            private List<{{targetEntity}}> {{targetEntityVarNamePlural}} = new ArrayList<>();
+        {{/isUnidirectional}}
+    {{/isManyToMany}}
+
+    {{#isOneToOne}}
+        {{#isBidirectional}}
+            @OneToOne(mappedBy = "{{targetEntityVarName}}", cascade = CascadeType.ALL)
+            private {{targetEntity}} {{targetEntityVarName}};
+        {{/isBidirectional}}
+        {{#isUnidirectional}}
+            @OneToOne(cascade = CascadeType.ALL)
+            @JoinColumn(name = "{{toEntityField}}")
+            private {{targetEntity}} {{targetEntityVarName}};
+        {{/isUnidirectional}}
+    {{/isOneToOne}}
+
+    {{#isInverseBidirectional}}
+        // Inverse side of bidirectional relationship
+        {{#isOneToMany}}
+            @ManyToOne
+            @JoinColumn(name = "{{toEntityField}}")
+            private {{targetEntity}} {{targetEntityVarName}};
+        {{/isOneToMany}}
+
+        {{#isManyToMany}}
+            private List<{{targetEntity}}> {{targetEntityVarNamePlural}} = new ArrayList<>();
+        {{/isManyToMany}}
+
+        {{#isOneToOne}}
+            @OneToOne
+            @JoinColumn(name = "{{fromEntityField}}")
+            private {{targetEntity}} {{targetEntityVarName}};
+        {{/isOneToOne}}
+    {{/isInverseBidirectional}}
+{{/relationships}}
+
+{{#relationships}}
+    {{#isOneToMany}}
+        {{^isInverseBidirectional}}
+            public List<{{targetEntity}}> get{{targetEntityVarNameUpperPlural}}() {
+            return {{targetEntityVarNamePlural}};
+            }
+
+            public void set{{targetEntityVarNameUpperPlural}}(List<{{targetEntity}}> {{targetEntityVarNamePlural}}) {
+            this.{{targetEntityVarNamePlural}} = {{targetEntityVarNamePlural}};
+            }
+        {{/isInverseBidirectional}}
+    {{/isOneToMany}}
+
+    {{#isManyToOne}}
+        public {{targetEntity}} get{{targetEntityVarNameUpper}}() {
+        return {{targetEntityVarName}};
+        }
+
+        public void set{{targetEntityVarNameUpper}}({{targetEntity}} {{targetEntityVarName}}) {
+        this.{{targetEntityVarName}} = {{targetEntityVarName}};
+        }
+    {{/isManyToOne}}
+
+    {{#isOneToOne}}
+        public {{targetEntity}} get{{targetEntityVarNameUpper}}() {
+        return {{targetEntityVarName}};
+        }
+
+        public void set{{targetEntityVarNameUpper}}({{targetEntity}} {{targetEntityVarName}}) {
+        this.{{targetEntityVarName}} = {{targetEntityVarName}};
+        }
+    {{/isOneToOne}}
+
+    {{#isManyToMany}}
+        public List<{{targetEntity}}> get{{targetEntityVarNameUpperPlural}}() {
+        return {{targetEntityVarNamePlural}};
+        }
+
+        public void set{{targetEntityVarNameUpperPlural}}(List<{{targetEntity}}> {{targetEntityVarNamePlural}}) {
+        this.{{targetEntityVarNamePlural}} = {{targetEntityVarNamePlural}};
+        }
+    {{/isManyToMany}}
+
+    {{#isInverseBidirectional}}
+        {{#isOneToMany}}
+            public {{targetEntity}} get{{targetEntityVarNameUpper}}() {
+            return {{targetEntityVarName}};
+            }
+
+            public void set{{targetEntityVarNameUpper}}({{targetEntity}} {{targetEntityVarName}}) {
+            this.{{targetEntityVarName}} = {{targetEntityVarName}};
+            }
+        {{/isOneToMany}}
+
+        {{#isManyToOne}}
+            public {{targetEntity}} get{{targetEntityVarNameUpper}}() {
+            return {{targetEntityVarName}};
+            }
+
+            public void set{{targetEntityVarNameUpper}}({{targetEntity}} {{targetEntityVarName}}) {
+            this.{{targetEntityVarName}} = {{targetEntityVarName}};
+            }
+        {{/isManyToOne}}
+    {{/isInverseBidirectional}}
+{{/relationships}}
+}

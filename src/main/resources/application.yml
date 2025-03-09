@@ -1,0 +1,12 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: project-template-engine
+
+mustache:
+    template-directory: classpath:/templates/spring-boot/
+
+slack:
+    webhook-url: https://hooks.slack.com/services/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
