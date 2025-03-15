@@ -1,39 +1,65 @@
-package {{config.packageName}}.domain;
+package {{packageName}}.domain;
 
+{{#lombokEnabled}}
+import lombok.Data;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+{{/lombokEnabled}}
 import jakarta.persistence.*;
 import java.util.*;
 
+{{#lombokEnabled}}
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+{{/lombokEnabled}}
+{{#hibernateEnabled}}
 @Entity
-public class {{entity.entityName}} {
-
-@Id
-@GeneratedValue(strategy = GenerationType.IDENTITY)
-private Long id;
-
-{{#entity.entityFields}}
+{{/hibernateEnabled}}
+public class {{name}} {
+{{#hibernateEnabled}}
+    @Id
+{{/hibernateEnabled}}
+    private {{idFieldType}} {{idFieldName}};
+{{#fields}}
     private {{fieldType}} {{fieldName}};
-{{/entity.entityFields}}
+{{/fields}}
+{{^lombokEnabled}}
 
-public {{entity.entityName}}() {}
+    public {{name}}() {}
 
-// Getters and Setters
-public Long getId() {
-return id;
-}
+    {{#hasField}}
+    public {{name}}({{idFieldType}} {{idFieldName}}, {{#fields}}{{fieldType}} {{fieldName}}{{^isLastField}}, {{/isLastField}}{{/fields}}) {
+        this.{{idFieldName}} = {{idFieldName}}
+        {{#fields}}
+        this.{{fieldName}} = {{fieldName}};
+        {{/fields}}
+    }
+    {{/hasField}}
+{{/lombokEnabled}}
 
-public void setId(Long id) {
-this.id = id;
-}
+    public {{idFieldType}} get{{idFieldNameUpper}}() {
+        return {{idFieldName}};
+    }
 
-{{#entity.entityFields}}
+    public void set{{idFieldNameUpper}}({{idFieldType}} {{idFieldName}}) {
+        this.{{idFieldName}} = {{idFieldName}};
+    }
+
+{{^lombokEnabled}}
+    {{#fields}}
+
     public {{fieldType}} get{{fieldNameUpper}}() {
-    return {{fieldName}};
+        return {{fieldName}};
     }
 
     public void set{{fieldNameUpper}}({{fieldType}} {{fieldName}}) {
-    this.{{fieldName}} = {{fieldName}};
+        this.{{fieldName}} = {{fieldName}};
     }
-{{/entity.entityFields}}
+    {{/fields}}
+{{/lombokEnabled}}
 
 {{#relationships}}
     {{#isOneToMany}}
@@ -69,8 +95,8 @@ this.id = id;
         {{#isUnidirectional}}
             @ManyToMany
             @JoinTable(
-            name = "{{entity.entityName}}_{{targetEntity}}",
-            joinColumns = @JoinColumn(name = "{{entity.entityName}}_id"),
+            name = "{{entityName}}_{{targetEntity}}",
+            joinColumns = @JoinColumn(name = "{{entityName}}_id"),
             inverseJoinColumns = @JoinColumn(name = "{{targetEntity}}_id")
             )
             private List<{{targetEntity}}> {{targetEntityVarNamePlural}} = new ArrayList<>();

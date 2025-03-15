@@ -14,4 +14,6 @@ import java.util.List;
 public class EntityDto {
     private List<EntityFieldDto> entityFields;
     private String entityName;
+    private String idFieldType;
+    private String idFieldName;
 }

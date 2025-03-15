@@ -6,7 +6,6 @@ import com.aiscaffolder.projecttemplateengine.domain.enums.DatabaseType;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -44,6 +43,7 @@ public class ConfigurationDto {
 
     @NotBlank(message = "Package name should not be blank")
     private String packageName;
-    private boolean ormEnabled;
-    private boolean lombokEnabled;
+
+    private Boolean hibernateEnabled;
+    private Boolean lombokEnabled;
 }

@@ -29,6 +29,14 @@ public class ProjectGenerationControllerAdvice {
         this.objectMapper = objectMapper;
     }
 
+    @ExceptionHandler(DuplicateEntity.class)
+    public ResponseEntity<Object> handleDuplicateEntityException(DuplicateEntity duplicateEntity) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put("javaVersion", duplicateEntity.getMessage());
+
+        return ResponseEntity.badRequest().body(ApiExceptionResponse.builder().status(HttpStatus.BAD_REQUEST).message(errors).time(LocalDateTime.now()).build());
+    }
+
     @ExceptionHandler(InvalidFormatException.class)
     public ResponseEntity<Object> enumValidationException(InvalidFormatException exception) {
         Map<String, String> error = new HashMap<>();
@@ -62,6 +70,14 @@ public class ProjectGenerationControllerAdvice {
 
     @ExceptionHandler(UnsupportedJavaVersion.class)
     public ResponseEntity<Object> handleUnsupportedJavaVersion(UnsupportedJavaVersion exception) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put("javaVersion", exception.getMessage());
+
+        return ResponseEntity.badRequest().body(ApiExceptionResponse.builder().status(HttpStatus.BAD_REQUEST).message(errors).time(LocalDateTime.now()).build());
+    }
+
+    @ExceptionHandler(InvalidEntity.class)
+    public ResponseEntity<Object> handleInvalidEntity(InvalidEntity exception) {
         Map<String, String> errors = new HashMap<>();
         errors.put("javaVersion", exception.getMessage());
 

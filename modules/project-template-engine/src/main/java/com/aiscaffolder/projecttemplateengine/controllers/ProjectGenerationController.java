@@ -2,10 +2,16 @@ package com.aiscaffolder.projecttemplateengine.controllers;
 
 import com.aiscaffolder.projecttemplateengine.application.usecases.ProjectGenerationUseCase;
 import com.aiscaffolder.projecttemplateengine.domain.dto.ApplicationDto;
+import com.aiscaffolder.projecttemplateengine.domain.dto.EntityDto;
+import com.aiscaffolder.projecttemplateengine.domain.dto.EntityFieldDto;
 import com.aiscaffolder.projecttemplateengine.domain.entities.Application;
+import com.aiscaffolder.projecttemplateengine.domain.entities.Entity;
+import com.aiscaffolder.projecttemplateengine.exceptions.DuplicateEntity;
+import com.aiscaffolder.projecttemplateengine.exceptions.InvalidEntity;
 import com.aiscaffolder.projecttemplateengine.exceptions.UnsupportedJavaVersion;
 import com.aiscaffolder.projecttemplateengine.mappers.Mapper;
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 import org.springframework.boot.system.JavaVersion;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -25,21 +31,22 @@ import java.nio.file.Paths;
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @RestController
+@AllArgsConstructor
 public class ProjectGenerationController {
 
     final ProjectGenerationUseCase projectGenerationUseCase;
     final Mapper<Application, ApplicationDto> mapper;
 
-    public ProjectGenerationController(ProjectGenerationUseCase projectGenerationUseCase, Mapper<Application, ApplicationDto> mapper) {
-        this.projectGenerationUseCase = projectGenerationUseCase;
-        this.mapper = mapper;
-    }
-
     @PostMapping("/generate")
     public ResponseEntity<Resource> generateProject(@Valid @RequestBody ApplicationDto applicationDto) throws IOException {
-
+        validateEntities(applicationDto.getEntities());
         validateJavaVersion(applicationDto.getConfig().getJavaVersion());
 
         // Tạo thư mục riêng biệt dựa vào timestamp
@@ -49,16 +56,10 @@ public class ProjectGenerationController {
         Files.createDirectories(Paths.get(outputDirectory));
 
         projectGenerationUseCase.execute(mapper.mapFrom(applicationDto), outputDirectory);
-        String zipFileName = "output.zip";
-//        Path zipFilePath = Paths.get(outputDir, zipFileName);
-//        String zipFilePath = "output.zip";
-        File zipFile = new File(zipFileName);
-        Path zipFilePath = (Path) Paths.get(outputDirectory, zipFileName);
+        String zipFileName = applicationDto.getConfig().getArtifact() + ".zip";
 
-//        if (!zipFile.exists()) {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//                    .body(null);
-//        }
+        File zipFile = new File(zipFileName);
+        Path zipFilePath = Paths.get(outputDirectory, zipFileName);
 
         Resource resource = new FileSystemResource(zipFilePath.toString());
 
@@ -82,5 +83,42 @@ public class ProjectGenerationController {
         }
 
         throw new UnsupportedJavaVersion("Unsupported Java Version: " + javaVersion + ". Supported Java Versions: 17, 21, 23");
+    }
+
+    private void validateEntities(List<EntityDto> entityDtos) {
+        Set<String> nameSet = new HashSet<>();
+
+        entityDtos.stream().forEach(entity -> {
+            if (!nameSet.add(entity.getEntityName())) {
+                throw new DuplicateEntity("Duplicate entity name found: " + entity.getEntityName());
+            }
+            validateEntity(entity);
+        });
+    }
+
+    private void validateEntity(EntityDto entityDto) {
+        if (entityDto.getEntityName() == null || entityDto.getEntityName().isEmpty()) {
+            throw new InvalidEntity("Invalid entity name value:" + entityDto.getEntityName());
+        }
+
+        validateEntityFields(entityDto.getEntityFields());
+    }
+
+    private void validateEntityFields(List<EntityFieldDto> entityFieldDtos) {
+        Set<String> nameSet = new HashSet<>();
+
+        entityFieldDtos.stream().forEach(entity -> {
+            if (null == entity.getFieldName() || entity.getFieldName().isEmpty()) {
+                throw new InvalidEntity("Invalid field name value: " + entity.getFieldName());
+            }
+
+            if (!nameSet.add(entity.getFieldName())) {
+                throw new DuplicateEntity("Duplicate entity field found: " + entity.getFieldName());
+            }
+
+            if ("id".equals(entity.getFieldName())) {
+                throw new InvalidEntity("An id field should not be manually added: " + entity.getFieldName());
+            }
+        });
     }
 }

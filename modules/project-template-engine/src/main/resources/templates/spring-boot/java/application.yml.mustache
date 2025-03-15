@@ -1,22 +1,10 @@
 spring:
-{{#activeProfiles}}
     profiles:
-        active: {{activeProfiles}}
-{{/activeProfiles}}
-
-{{#dataSources}}
-    datasource-{{dbName}}:
-        url: jdbc:{{dbType}}://{{host}}:{{port}}/{{dbName}}
-        username: {{username}}
-        password: {{password}}
-        driver-class-name: {{driver}}
-{{/dataSources}}
-
-{{#environmentVariables}}
-    {{key}}: {{value}}
-{{/environmentVariables}}
-
-# Custom properties
-{{#customProperties}}
-    {{key}}: {{value}}
-{{/customProperties}}
+        active: dev
+{{#name}}
+    application: {{name}}
+{{/name}}
+{{#serverPort}}
+server:
+    port: {{serverPort}}
+{{/serverPort}}

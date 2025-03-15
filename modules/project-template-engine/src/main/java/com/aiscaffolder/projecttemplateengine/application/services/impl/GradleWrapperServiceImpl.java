@@ -1,4 +1,4 @@
-package com.aiscaffolder.projecttemplateengine.application.services;
+package com.aiscaffolder.projecttemplateengine.application.services.impl;
 
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
@@ -9,11 +9,11 @@ import java.io.IOException;
 import java.io.Writer;
 
 @Service
-public class GradleWrapperService {
+public class GradleWrapperServiceImpl {
 
     private final MustacheFactory mustacheFactory;
 
-    public GradleWrapperService(MustacheFactory mustacheFactory) {
+    public GradleWrapperServiceImpl(MustacheFactory mustacheFactory) {
         this.mustacheFactory = mustacheFactory;
     }
 
@@ -24,9 +24,6 @@ public class GradleWrapperService {
 
         // Generate gradle wrapper properties file
         renderTemplate("gradle-wrapper.properties.mustache", outputDir + "/gradle-wrapper.properties");
-
-        // Set executable for gradlew (Linux/Mac)
-        // setExecutable(Path.of(outputDir, "gradlew"));
     }
 
     private void renderTemplate(String templateName, String outputPath) throws IOException {
