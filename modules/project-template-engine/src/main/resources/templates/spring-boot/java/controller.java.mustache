@@ -1,0 +1,53 @@
+package {{packageName}}.controllers;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import java.util.List;
+import java.util.Optional;
+import {{packageName}}.services.{{entity}}Service;
+import {{packageName}}.domain.{{entity}};
+
+@RestController
+@RequestMapping("/{{entityLower}}s")
+public class {{entity}}Controller {
+
+    @Autowired
+    private {{entity}}Service {{entityLower}}Service;
+
+    @PostMapping
+    public ResponseEntity<{{entity}}> save{{entity}}(@RequestBody {{entity}} {{entityLower}}) {
+
+        {{entity}} saved{{entity}} = {{entityLower}}Service.save{{entity}}({{entityLower}});
+
+        return ResponseEntity.ok(saved{{entity}});
+    }
+
+    @GetMapping
+    public ResponseEntity<List<{{entity}}>> getAll{{entity}}s() {
+
+        List<{{entity}}> saved{{entity}}s = {{entityLower}}Service.getAll{{entity}}s();
+
+        return ResponseEntity.ok(saved{{entity}}s);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Object> get{{entity}}ById(@PathVariable {{idFieldType}} id) {
+
+        Optional<{{entity}}> saved{{entity}} = {{entityLower}}Service.get{{entity}}ById(id);
+
+        if (saved{{entity}}.isPresent()) {
+            return ResponseEntity.ok(saved{{entity}}.get());
+        }
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND) .body(null);
+    }
+
+    @DeleteMapping("/{id}")
+    public void delete{{entity}}(@PathVariable {{idFieldType}} id) {
+        {{entityLower}}Service.delete{{entity}}(id);
+    }
+}
