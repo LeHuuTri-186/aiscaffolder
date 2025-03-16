@@ -31,6 +31,14 @@
         <java.version>{{config.javaVersion}}</java.version>
     </properties>
     <dependencies>
+        {{#config.lombokEnabled}}
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.30</version>
+            <scope>provided</scope>
+        </dependency>
+        {{/config.lombokEnabled}}
         {{#jwtAuthEnabled}}
         <dependencies>
             <dependency>

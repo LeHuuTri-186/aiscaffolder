@@ -50,7 +50,7 @@ public class ApiGenerationService {
             fieldName: The name of the field (e.g., id, username).
             fieldType:\s
             - The type of the field (e.g., String, Integer, LocalDate, UUID).
-            - Valid field types include: String, Integer, Long, BigDecimal, Float, Double, Enum, Boolean, LocalDate, ZoneDateTime, Instant, Duration, UUID, Blob, AnyBlob, ImageBlob, TextBlob.
+            - Valid field types include: String, Integer, Long, BigDecimal, Float, Double, Boolean, LocalDate, UUID.
             Relationships (relationships)
             Define how entities relate to each other using the following options:
             
