@@ -176,6 +176,10 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
         for (Entity entity : entities) {
             Map<String, Object> entityRepositoryContext = new HashMap<>();
 
+            if (configuration.getHibernateEnabled()) {
+                entityRepositoryContext.put("jpa", entity.getEntityName());
+            }
+
             entityRepositoryContext.put("entity", entity.getEntityName());
             entityRepositoryContext.put("packageName", configuration.getPackageName());
             entityRepositoryContext.put("idFieldType", entity.getIdFieldType());
