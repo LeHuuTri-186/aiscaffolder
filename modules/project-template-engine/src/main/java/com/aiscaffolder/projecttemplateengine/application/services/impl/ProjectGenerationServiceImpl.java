@@ -55,7 +55,7 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
         }
         generateConfigurations(application.getConfig(), outputDir);
 
-        generateEntities(application.getEntities(), application.getConfig(), outputDir);
+        generateEntities(application.getEntities(), application.getConfig(), application.getRelationships(), outputDir);
 
         log.info("output dir: {}", outputDir);
         if (application.getConfig().getBuildTool() == BuildTool.MAVEN) {
@@ -123,57 +123,48 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
     }
 
     @Override
-    public void generateEntities(List<Entity> entities, Configuration configuration, String outputDir) {
+    public void generateEntities(List<Entity> entities, Configuration configuration, List<Relationship> relationships, String outputDir) {
         for (Entity entity : entities) {
 
             Map<String, Object> entityContext = new HashMap<>();
 
-            entityContext.put("name", entity.getEntityName());
+            generateEntityContext(configuration, entity, entityContext);
 
-            if (null == entity.getIdFieldName()) {
-                entityContext.put("idFieldName", "id");
-                entityContext.put("idFieldNameUpper", "Id");
-            } else {
-                entityContext.put("idFieldName", entity.getIdFieldName());
-                entityContext.put("idFieldNameUpper", capitalize(entity.getIdFieldName()));
-            }
+            List<Map<String, Object>> relationshipContexts = new ArrayList<>();
 
-            if (null == entity.getIdFieldType()) {
-                entityContext.put("idFieldType", "Integer");
-            } else {
-                entityContext.put("idFieldType", entity.getIdFieldType());
-            }
+            relationships.forEach(relationship -> {
+                Map<String, Object> relationshipContext = new HashMap<>();
+                if (relationship.getType() == RelationshipType.ONE_TO_ONE) {
+                    relationshipContext.put("isOneToOne", true);
+                } else if (relationship.getType() == RelationshipType.MANY_TO_ONE) {
+                    relationshipContext.put("isManyToOne", true);
+                } else if (relationship.getType() == RelationshipType.ONE_TO_MANY) {
+                    relationshipContext.put("isOneToMany", true);
+                } else if (relationship.getType() == RelationshipType.MANY_TO_MANY) {
+                    relationshipContext.put("isManyToMany", true);
+                }
 
-            entityContext.put("packageName", configuration.getPackageName());
+                relationshipContext.put("targetClass", relationship.getToEntity());
+                relationshipContext.put("sourceClass", relationship.getFromEntity());
+                relationshipContext.put("sourceClassLower", relationship.getFromEntity().toLowerCase());
+                relationshipContext.put("targetClassLower", relationship.getToEntity().toLowerCase());
+                relationshipContext.put("isBidirectional", relationship.getIsBidirectional());
+                relationshipContext.put("nameLower",entity.getEntityName().toLowerCase());
 
-            entityContext.put("lombokEnabled", false);
+                if (relationship.getFromEntity().equals(entity.getEntityName())) {
+                    relationshipContext.put("isSourceClass", true);
+                }
 
-            if (null == configuration.getLombokEnabled() || configuration.getLombokEnabled()) {
-                entityContext.put("lombokEnabled", true);
-            }
+                if (relationship.getToEntity().equals(entity.getEntityName())) {
+                    relationshipContext.put("isTargetClass", true);
+                }
 
-            entityContext.put("hibernateEnabled", false);
+                relationshipContexts.add(relationshipContext);
 
-            if (null == configuration.getHibernateEnabled() || configuration.getHibernateEnabled()) {
-                entityContext.put("hibernateEnabled", true);
-            }
+                log.info("relationshipContexts: {}", relationshipContext);
+            });
 
-            List<Map<String, Object>> entityFields = new ArrayList<>();
-
-            entityContext.put("hasField", !entity.getEntityFields().isEmpty());
-
-            for (EntityField field : entity.getEntityFields()) {
-                Map<String, Object> fieldContext = new HashMap<>();
-                fieldContext.put("fieldName", field.getFieldName());
-                fieldContext.put("fieldType", field.getFieldType());
-                fieldContext.put("fieldNameUpper", capitalize(field.getFieldName()));
-
-                entityFields.add(fieldContext);
-            }
-
-            entityFields.getLast().put("isLastField", true);
-
-            entityContext.put("fields", entityFields);
+            entityContext.put("relationships", relationshipContexts);
 
             String content = renderTemplate(TEMPLATE_PATH + "entity.java", entityContext);
 
@@ -186,6 +177,56 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    private void generateEntityContext(Configuration configuration, Entity entity, Map<String, Object> entityContext) {
+        entityContext.put("name", entity.getEntityName());
+        entityContext.put("nameLower", entity.getEntityName().toLowerCase());
+
+        if (null == entity.getIdFieldName()) {
+            entityContext.put("idFieldName", "id");
+            entityContext.put("idFieldNameUpper", "Id");
+        } else {
+            entityContext.put("idFieldName", entity.getIdFieldName());
+            entityContext.put("idFieldNameUpper", capitalize(entity.getIdFieldName()));
+        }
+
+        if (null == entity.getIdFieldType()) {
+            entityContext.put("idFieldType", "Integer");
+        } else {
+            entityContext.put("idFieldType", entity.getIdFieldType());
+        }
+
+        entityContext.put("packageName", configuration.getPackageName());
+
+        entityContext.put("lombokEnabled", false);
+
+        if (null == configuration.getLombokEnabled() || configuration.getLombokEnabled()) {
+            entityContext.put("lombokEnabled", true);
+        }
+
+        entityContext.put("hibernateEnabled", false);
+
+        if (null == configuration.getHibernateEnabled() || configuration.getHibernateEnabled()) {
+            entityContext.put("hibernateEnabled", true);
+        }
+
+        List<Map<String, Object>> entityFields = new ArrayList<>();
+
+        entityContext.put("hasField", !entity.getEntityFields().isEmpty());
+
+        for (EntityField field : entity.getEntityFields()) {
+            Map<String, Object> fieldContext = new HashMap<>();
+            fieldContext.put("fieldName", field.getFieldName());
+            fieldContext.put("fieldType", field.getFieldType());
+            fieldContext.put("fieldNameUpper", capitalize(field.getFieldName()));
+
+            entityFields.add(fieldContext);
+        }
+
+        entityFields.getLast().put("isLastField", true);
+
+        entityContext.put("fields", entityFields);
     }
 
     @Override

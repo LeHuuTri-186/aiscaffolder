@@ -75,8 +75,6 @@ public class ProjectGenerationUseCase {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
-        slackNotificationService.sendNotification("Project generated successfully at " + LocalDate.now());
     }
 
     private void generateProjectFiles(Map<String, String> files, List<Entity> entities) {
