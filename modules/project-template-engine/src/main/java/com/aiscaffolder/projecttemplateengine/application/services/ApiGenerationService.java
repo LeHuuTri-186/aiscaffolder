@@ -33,14 +33,19 @@ public class ApiGenerationService {
             Database Type: (String) Options: SQL, MONGO, CASSANDRA, COUCHBASE.
             Dev Database Type: (String) The database type used for development (e.g., H2).
             Prod Database Type: (String) The database type used for production (e.g., PostgreSQL).
-            Build Tool: (String) Options: Maven, Gradle.
+            Build Tool: (String) Options: MAVEN, GRADLE.
             Application Type: (String) Options: MONOLITH, MICROSERVICE, GATEWAY.
             Spring Boot Version: (String) The version of Spring Boot (e.g., 3.4.2).
-            Java Version: (String) The version of Java (e.g., 21).
+            Java Version: (Integer) The version of Java (e.g., 21).
+            lombokEnabled: (Boolean) Enable lombok plugin.
+            hibernateEnabled: (Boolean) Enable hibernate, should be false if using NoSQL.
+            
             Entities (entities)
             Each entity should have:
             
             entityName: The name of the entity (e.g., User, Project, Task).
+            idFieldType: The type of the Id field (e.g., String, Integer, Long, UUID)
+            idFieldName: name of id field (e.g., id)
             entityFields: A list of fields, each field should include:
             fieldName: The name of the field (e.g., id, username).
             fieldType:\s
@@ -57,79 +62,101 @@ public class ApiGenerationService {
             
             From Entity: The source entity in the relationship.
             To Entity: The destination entity in the relationship.
-            From Field: The field in the source entity that holds the relationship.
-            To Field: The field in the destination entity that holds the relationship.
-            Short form for Bidirectional Relationships: If both fromField and toField are omitted, the relationship is considered bidirectional by default.
+            
+            is Bidirectional (boolean): The source entity should be a bidirectional relationship.
             
             Example Structure:
             {
-              "config": {
-                "name": "SampleApp",
-                "group": "com.example",
-                "artifact": "sample",
-                "packageName": "com.example.sample",
-                "authenticationType": "JWT",
-                "serverPort": 8080,
-                "databaseType": "SQL",
-                "devDatabaseType": "H2",
-                "prodDatabaseType": "PostgreSQL",
-                "buildTool": "Maven",
-                "applicationType": "MONOLITH",
-                "springBootVersion": "3.4.2",
-                "javaVersion": "21",
-                "description": "AI-generated Spring Boot project"
-              },
-              "entities": [
-                {
-                  "entityName": "User",
-                  "entityFields": [
-                    { "fieldName": "id", "fieldType": "Long" },
-                    { "fieldName": "username", "fieldType": "String" },
-                    { "fieldName": "email", "fieldType": "String" },
-                    { "fieldName": "createdAt", "fieldType": "LocalDate" }
-                  ]
-                },
-                {
-                  "entityName": "Project",
-                  "entityFields": [
-                    { "fieldName": "id", "fieldType": "Long" },
-                    { "fieldName": "name", "fieldType": "String" },
-                    { "fieldName": "description", "fieldType": "String" },
-                    { "fieldName": "startDate", "fieldType": "LocalDate" },
-                    { "fieldName": "endDate", "fieldType": "LocalDate" }
-                  ]
-                }
-              ],
-              "relationships": [
-                {
-                  "type": "ONE_TO_MANY",
-                  "fromEntity": "Project",
-                  "fromField": "tasks",
-                  "toEntity": "Task",
-                  "toField": "project"
-                },
-                {
-                  "type": "MANY_TO_ONE",
-                  "fromEntity": "Task",
-                  "fromField": "user",
-                  "toEntity": "User",
-                  "toField": "tasks"
-                }
-              ],
-              "dependencies": [
-                {
-                  "groupId": "org.springframework.boot",
-                  "artifactId": "spring-boot-starter-data-jpa",
-                  "version": "2.7.0",
-                  "scope": "compile"
-                },
-                {
-                  "groupId": "org.postgresql",
-                  "artifactId": "postgresql",
-                  "version": "42.3.3",
-                  "scope": "runtime"
-                }
-              ]
+                 "config": {
+                     "name": "BookManagementApp",
+                     "group": "com.example",
+                     "artifact": "bookmanagement",
+                     "packageName": "com.example.bookmanagement",
+                     "description": "A Spring Boot application for managing books and authors.",
+                     "authenticationType": "JWT",
+                     "serverPort": 0,
+                     "databaseType": "SQL",
+                     "devDatabaseType": "H2",
+                     "prodDatabaseType": "PostgreSQL",
+                     "buildTool": "MAVEN",
+                     "applicationType": "MONOLITH",
+                     "springBootVersion": "3.4.2",
+                     "javaVersion": 21,
+                     "lombokEnabled": false,
+                     "hibernateEnabled": true
+                 },
+                 "entities": [
+                     {
+                         "entityName": "Post",
+                         "idFieldType": "Long",
+                         "idFieldName": "id",
+                         "entityFields": [
+                             {
+                                 "fieldName": "title",
+                                 "fieldType": "String"
+                             },
+                             {
+                                 "fieldName": "content",
+                                 "fieldType": "String"
+                             }
+                         ]
+                     },
+                     {
+                         "entityName": "User",
+                         "idFieldType": "Long",
+                         "idFieldName": "id",
+                         "entityFields": [
+                             {
+                                 "fieldName": "name",
+                                 "fieldType": "String"
+                             },
+                             {
+                                 "fieldName": "age",
+                                 "fieldType": "Integer"
+                             }
+                         ]
+                     }
+                 ],
+                 "relationships": [
+                     {
+                         "type": "ONE_TO_MANY",
+                         "fromEntity": "User",
+                         "toEntity": "Post",
+                         "isBidirectional": false
+                     }
+                 ],
+                 "dependencies": [
+                     {
+                         "groupId": "org.springframework.boot",
+                         "artifactId": "spring-boot-starter-data-jpa",
+                         "version": "3.4.2",
+                         "scope": "compile"
+                     },
+                     {
+                         "groupId": "org.springframework.boot",
+                         "artifactId": "spring-boot-starter-web",
+                         "version": "3.4.2",
+                         "scope": "compile"
+                     },
+                     {
+                         "groupId": "org.postgresql",
+                         "artifactId": "postgresql",
+                         "version": "42.6.0",
+                         "scope": "runtime"
+                     },
+                     {
+                         "groupId": "com.h2database",
+                         "artifactId": "h2",
+                         "version": "2.2.224",
+                         "scope": "runtime"
+                     },
+                     {
+                         "groupId": "org.springframework.boot",
+                         "artifactId": "spring-boot-starter-test",
+                         "version": "3.4.2",
+                         "scope": "test"
+                     }
+                 ]
             }
             
             Generate a JSON file following the schema.

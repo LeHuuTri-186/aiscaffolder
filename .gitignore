@@ -35,3 +35,4 @@ build/
 output/
 modules/project-template-engine/src/main/resources/.env
 .idea
+.DS_Store

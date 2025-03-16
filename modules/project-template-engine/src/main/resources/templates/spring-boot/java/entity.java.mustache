@@ -21,9 +21,19 @@ import java.util.*;
 @Entity
 @Table(name="{{nameLower}}s")
 {{/hibernateEnabled}}
+{{#couchbase}}
+@Document
+{{/couchbase}}
+{{#cassandra}}
+@Table("{{nameLower}}s")
+{{/cassandra}}
+{{#mongodb}}
+@Document(collection = "{{nameLower}}s")
+{{/mongodb}}
 public class {{name}} {
 {{#hibernateEnabled}}
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
 {{/hibernateEnabled}}
     private {{idFieldType}} {{idFieldName}};
 {{#fields}}
