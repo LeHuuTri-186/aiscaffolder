@@ -9,6 +9,9 @@ import java.util.List;
 public interface GenerateProjectService {
     void generateProject();
     void generateWrapper();
+    void generateControllers(List<Entity> entities, Configuration configuration, String outputDir);
+    void generateServices(List<Entity> entities, Configuration configuration, String outputDir);
+    void generateRepositories(List<Entity> entities, Configuration configuration, String outputDir);
     void generateEntities(List<Entity> entities, Configuration configuration, List<Relationship> relationships, String outputDir);
     void generateConfigurations(Configuration configuration, String outputDir);
 }

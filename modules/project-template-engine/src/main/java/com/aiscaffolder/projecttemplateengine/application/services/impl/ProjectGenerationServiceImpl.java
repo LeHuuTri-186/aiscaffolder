@@ -53,11 +53,16 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
             // Write the rendered content to the resolved file path
             writeFile(outputDir, relativeFilePath, fileContent);
         }
+        generateRepositories(application.getEntities(), application.getConfig(), outputDir);
+
         generateConfigurations(application.getConfig(), outputDir);
 
         generateEntities(application.getEntities(), application.getConfig(), application.getRelationships(), outputDir);
 
-        log.info("output dir: {}", outputDir);
+        generateServices(application.getEntities(), application.getConfig(), outputDir);
+
+        generateControllers(application.getEntities(), application.getConfig(), outputDir);
+
         if (application.getConfig().getBuildTool() == BuildTool.MAVEN) {
             setExecutable(Path.of(outputDir, "mvnw"));
         } else if (application.getConfig().getBuildTool() == BuildTool.GRADLE) {
@@ -120,6 +125,71 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
     @Override
     public void generateWrapper() {
 
+    }
+
+    @Override
+    public void generateControllers(List<Entity> entities, Configuration configuration, String outputDir) {
+        for (Entity entity : entities) {
+            Map<String, Object> entityRepositoryContext = new HashMap<>();
+
+            entityRepositoryContext.put("entity", entity.getEntityName());
+            entityRepositoryContext.put("entityLower", entity.getEntityName().toLowerCase());
+            entityRepositoryContext.put("packageName", configuration.getPackageName());
+            entityRepositoryContext.put("idFieldType", entity.getIdFieldType());
+
+            String content = renderTemplate(TEMPLATE_PATH + "controller.java.mustache", entityRepositoryContext);
+
+            String entityFilePath = "src/main/java/" + configuration.getPackageName().replace('.', '/')
+                    + "/controllers/" + entity.getEntityName() + "Controller.java";
+            try {
+                writeFile(outputDir, entityFilePath, content);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    @Override
+    public void generateServices(List<Entity> entities, Configuration configuration, String outputDir) {
+        for (Entity entity : entities) {
+            Map<String, Object> entityRepositoryContext = new HashMap<>();
+
+            entityRepositoryContext.put("entity", entity.getEntityName());
+            entityRepositoryContext.put("entityLower", entity.getEntityName().toLowerCase());
+            entityRepositoryContext.put("packageName", configuration.getPackageName());
+            entityRepositoryContext.put("idFieldType", entity.getIdFieldType());
+
+            String content = renderTemplate(TEMPLATE_PATH + "service.java.mustache", entityRepositoryContext);
+
+            String entityFilePath = "src/main/java/" + configuration.getPackageName().replace('.', '/')
+                    + "/services/" + entity.getEntityName() + "Service.java";
+            try {
+                writeFile(outputDir, entityFilePath, content);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    @Override
+    public void generateRepositories(List<Entity> entities, Configuration configuration, String outputDir) {
+        for (Entity entity : entities) {
+            Map<String, Object> entityRepositoryContext = new HashMap<>();
+
+            entityRepositoryContext.put("entity", entity.getEntityName());
+            entityRepositoryContext.put("packageName", configuration.getPackageName());
+            entityRepositoryContext.put("idFieldType", entity.getIdFieldType());
+
+            String content = renderTemplate(TEMPLATE_PATH + "repositoryInterface.java.mustache", entityRepositoryContext);
+
+            String entityFilePath = "src/main/java/" + configuration.getPackageName().replace('.', '/')
+                    + "/repositories/" + entity.getEntityName() + "Repository.java";
+            try {
+                writeFile(outputDir, entityFilePath, content);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     @Override
@@ -235,8 +305,29 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
         Map<String, Object> devProfile = new HashMap<>();
         Map<String, Object> prodProfile = new HashMap<>();
 
-        configMap.put("hasDbConfig", config.getDatabaseType() != DatabaseType.NO);
-        configMap.put("isSQL", config.getDatabaseType() == DatabaseType.SQL);
+        if (config.getDatabaseType() != DatabaseType.NO) {
+            configMap.put("dbConfig", true);
+
+            if (config.getDatabaseType() == DatabaseType.SQL) {
+                configMap.put("isDatasource", true);
+                configMap.put("isMySql", config.getProdDatabaseType().equalsIgnoreCase("mysql"));
+                configMap.put("isOracle", config.getProdDatabaseType().equalsIgnoreCase("oracle"));
+                configMap.put("isPostgres", config.getProdDatabaseType().equalsIgnoreCase("postgresql"));
+                configMap.put("isMssql", config.getProdDatabaseType().equalsIgnoreCase("mssql"));
+                configMap.put("isMariaDb", config.getProdDatabaseType().equalsIgnoreCase("mariadb"));
+            } else {
+                configMap.put("isData", false);
+            }
+
+            if (!config.getProdDatabaseType().equalsIgnoreCase("no")) {
+                prodProfile.put("isDatasource", true);
+                prodProfile.put("isMySql", config.getProdDatabaseType().equalsIgnoreCase("mysql"));
+                prodProfile.put("isOracle", config.getProdDatabaseType().equalsIgnoreCase("oracle"));
+                prodProfile.put("isPostgres", config.getProdDatabaseType().equalsIgnoreCase("postgresql"));
+                prodProfile.put("isMssql", config.getProdDatabaseType().equalsIgnoreCase("mssql"));
+                prodProfile.put("isMariaDb", config.getProdDatabaseType().equalsIgnoreCase("mariadb"));
+            }
+        }
 
         configMap.put("serverPort", config.getServerPort());
         configMap.put("name", config.getName());
@@ -244,7 +335,7 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
         try {
             writeFile(outputDir, "src/main/resources/application.yml", renderTemplate(TEMPLATE_PATH + "application.yml", configMap));
             writeFile(outputDir, "src/main/resources/application-dev.yml", renderTemplate(TEMPLATE_PATH + "application-dev.yml", configMap));
-            writeFile(outputDir, "src/main/resources/application-prod.yml", renderTemplate(TEMPLATE_PATH + "application-prod.yml", configMap));
+            writeFile(outputDir, "src/main/resources/application-prod.yml", renderTemplate(TEMPLATE_PATH + "application-prod.yml", prodProfile));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
