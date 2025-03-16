@@ -31,11 +31,18 @@
         <java.version>{{config.javaVersion}}</java.version>
     </properties>
     <dependencies>
+        {{#hibernateEnabled}}
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+            <version>3.4.2</version>
+            <scope>compile</scope>
+        </dependency>
+        {{/hibernateEnabled}}
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-tomcat</artifactId>
@@ -68,5 +75,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>

@@ -13,4 +13,6 @@ import java.util.List;
 public class Entity {
     private List<EntityField> entityFields;
     private String entityName;
+    private String idFieldType;
+    private String idFieldName;
 }
