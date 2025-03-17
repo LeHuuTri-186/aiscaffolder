@@ -18,6 +18,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,6 +34,7 @@ import java.io.File;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @RestController
 @AllArgsConstructor
@@ -43,13 +45,15 @@ public class ProjectGenerationController {
     final Mapper<Application, ApplicationDto> mapper;
 
     @PostMapping("/generate")
+    @CrossOrigin(origins = "http://localhost:5173")
     public ResponseEntity<Resource> generateProject(@Valid @RequestBody ApplicationDto applicationDto) throws IOException {
         validateEntities(applicationDto.getEntities());
         validateJavaVersion(applicationDto.getConfig().getJavaVersion());
 
-        // Tạo thư mục riêng biệt dựa vào timestamp
+        // Tạo thư mục riêng biệt dựa vào timestamp và UUID
         String timestamp = String.valueOf(System.currentTimeMillis());
-        String outputDirectory = "output/project-" + timestamp;
+        String uuid = UUID.randomUUID().toString().substring(0, 8);
+        String outputDirectory = "output/project-" + timestamp + "-" + uuid;
 
         Files.createDirectories(Paths.get(outputDirectory));
 
