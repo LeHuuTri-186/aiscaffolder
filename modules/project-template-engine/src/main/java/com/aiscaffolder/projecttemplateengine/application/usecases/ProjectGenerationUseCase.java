@@ -63,11 +63,14 @@ public class ProjectGenerationUseCase {
         // Generate Gradle Wrapper
         try {
             if (application.getConfig().getBuildTool() == BuildTool.GRADLE) {
-                gradleWrapperServiceImpl.generateGradleWrapper(outputDirectory);
+                gradleWrapperServiceImpl.generateGradleSettings(outputDirectory, application.getConfig().getArtifact());
+                gradleWrapperServiceImpl.generateWrapper(outputDirectory);
                 updatedFiles.put("build.gradle", "build.gradle.mustache");
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to generate Gradle Wrapper", e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
 
         try {

@@ -3,7 +3,6 @@ package com.aiscaffolder.projecttemplateengine.application.services.impl;
 import com.aiscaffolder.projecttemplateengine.application.services.GenerateProjectService;
 import com.aiscaffolder.projecttemplateengine.application.services.ZipProjectService;
 import com.aiscaffolder.projecttemplateengine.domain.entities.*;
-import com.aiscaffolder.projecttemplateengine.domain.enums.BuildTool;
 import com.aiscaffolder.projecttemplateengine.domain.enums.DatabaseType;
 import com.aiscaffolder.projecttemplateengine.domain.enums.RelationshipType;
 import com.github.mustachejava.Mustache;
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermission;
 import java.util.*;
 
 
@@ -63,12 +61,6 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
 
         generateControllers(application.getEntities(), application.getConfig(), outputDir);
 
-        if (application.getConfig().getBuildTool() == BuildTool.MAVEN) {
-            setExecutable(Path.of(outputDir, "mvnw"));
-        } else if (application.getConfig().getBuildTool() == BuildTool.GRADLE) {
-            setExecutable(Path.of(outputDir, "gradlew"));
-        }
-
         log.info(outputDir);
 
         zipProjectService.zipProject(outputDir, outputDir + "/" + application.getConfig().getArtifact() + ".zip");
@@ -99,23 +91,6 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
         Files.writeString(filePath, fileContent);
     }
 
-    private void setExecutable(Path path) throws Exception {
-        try {
-            Set<PosixFilePermission> permissions = EnumSet.of(
-                    PosixFilePermission.OWNER_EXECUTE,
-                    PosixFilePermission.OWNER_READ,
-                    PosixFilePermission.OWNER_WRITE,
-                    PosixFilePermission.GROUP_EXECUTE,
-                    PosixFilePermission.GROUP_READ,
-                    PosixFilePermission.OTHERS_EXECUTE,
-                    PosixFilePermission.OTHERS_READ
-            );
-            Files.setPosixFilePermissions(path, permissions);
-        } catch (UnsupportedOperationException e) {
-            // Fallback for non-POSIX systems (Windows)
-            var b = path.toFile().setExecutable(true);
-        }
-    }
 
     @Override
     public void generateProject() {
@@ -125,6 +100,10 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
     @Override
     public void generateWrapper() {
 
+    }
+
+    @Override
+    public void generateDependencies(List<Dependency> dependencies, Configuration configuration, String outputDir) {
     }
 
     @Override
@@ -288,6 +267,10 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
         List<Map<String, Object>> entityFields = new ArrayList<>();
 
         entityContext.put("hasField", !entity.getEntityFields().isEmpty());
+
+        if (entity.getEntityFields().isEmpty()) {
+            return;
+        }
 
         for (EntityField field : entity.getEntityFields()) {
             Map<String, Object> fieldContext = new HashMap<>();
