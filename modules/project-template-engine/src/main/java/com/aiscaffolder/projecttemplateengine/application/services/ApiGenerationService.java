@@ -28,12 +28,13 @@ public class ApiGenerationService {
             Artifact: (String) The artifact ID (e.g., sample).
             Package Name: (String) The package name (e.g., com.example.sample).
             Description: (String) A description of the application.
-            Authentication Type: (String) Options: JWT, SESSION, OAUTH2.
+            Authentication Type: (String) Options: JWT, SESSION, OAUTH2, NO.
             Server Port: (Integer) The port on which the server will run (e.g., 8080).
-            Database Type: (String) Options: SQL, MONGO, CASSANDRA, COUCHBASE.
+            Database Type: (String) Options: SQL, MONGO, CASSANDRA, COUCHBASE, NO.
             Dev Database Type: (String) The database type used for development (e.g., H2).
             Prod Database Type: (String) The database type used for production (e.g., PostgreSQL).
             Build Tool: (String) Options: MAVEN, GRADLE.
+            caching: (String) Options: NO, Redis, Ehcache, Hazelcast.
             Application Type: (String) Options: MONOLITH, MICROSERVICE, GATEWAY.
             Spring Boot Version: (String) The version of Spring Boot (e.g., 3.4.2).
             Java Version: (Integer) The version of Java (e.g., 21).
@@ -65,6 +66,8 @@ public class ApiGenerationService {
             
             is Bidirectional (boolean): The source entity should be a bidirectional relationship.
             
+            Only one side of the relationship should be defined, and whether the relationship is bidirectional or unidirectional should be handle by the flag isBidirectional.
+            
             Example Structure:
             {
                  "config": {
@@ -79,6 +82,7 @@ public class ApiGenerationService {
                      "devDatabaseType": "H2",
                      "prodDatabaseType": "PostgreSQL",
                      "buildTool": "MAVEN",
+                     "caching": "Hazelcast",
                      "applicationType": "MONOLITH",
                      "springBootVersion": "3.4.2",
                      "javaVersion": 21,

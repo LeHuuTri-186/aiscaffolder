@@ -13,7 +13,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>war</packaging>
     <name>demo</name>
-    <description>Demo project for Spring Boot</description>
+    <description>{{config.description}}</description>
     <url/>
     <licenses>
         <license/>
@@ -40,7 +40,6 @@
         </dependency>
         {{/config.lombokEnabled}}
         {{#jwtAuthEnabled}}
-        <dependencies>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-security</artifactId>
@@ -58,7 +57,6 @@
                 <groupId>org.springframework.security</groupId>
                 <artifactId>spring-security-web</artifactId>
             </dependency>
-        </dependencies>
         {{/jwtAuthEnabled}}
         {{#hibernateEnabled}}
         <dependency>
