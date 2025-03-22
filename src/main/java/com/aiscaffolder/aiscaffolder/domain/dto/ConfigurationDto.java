@@ -2,14 +2,15 @@ package com.aiscaffolder.aiscaffolder.domain.dto;
 
 import com.aiscaffolder.aiscaffolder.domain.enums.ApplicationType;
 import com.aiscaffolder.aiscaffolder.domain.enums.BuildTool;
+import com.aiscaffolder.aiscaffolder.domain.enums.CachingSolution;
 import com.aiscaffolder.aiscaffolder.domain.enums.DatabaseType;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.Range;
 
 @Data
 @Builder
@@ -18,10 +19,9 @@ import lombok.NoArgsConstructor;
 public class ConfigurationDto {
     private String authenticationType;
 
-    @Min(value = 0, message = "Port cannot be a negative value")
-    @Max(value = 65535, message = "Port must not be greater than 65535")
-    private int serverPort;
-
+    @NotNull
+    @Range(min = 0, max = 65535, message = "Port must be in range of 0 - 65535")
+    private Integer serverPort;
     private DatabaseType databaseType;
     private String devDatabaseType;
     private String prodDatabaseType;
@@ -29,8 +29,7 @@ public class ConfigurationDto {
     private ApplicationType applicationType;
     private String description;
     private String springBootVersion;
-
-    private int javaVersion;
+    private Integer javaVersion;
 
     @NotBlank(message = "Group should not be blank")
     private String group;
@@ -43,6 +42,9 @@ public class ConfigurationDto {
 
     @NotBlank(message = "Package name should not be blank")
     private String packageName;
-    private boolean ormEnabled;
-    private boolean lombokEnabled;
+
+    private CachingSolution caching;
+
+    private Boolean hibernateEnabled;
+    private Boolean lombokEnabled;
 }

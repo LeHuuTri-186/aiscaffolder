@@ -1,38 +1,49 @@
 plugins {
-id 'org.springframework.boot' version '{{config.springBootVersion}}'
-id 'io.spring.dependency-management' version '1.0.11.RELEASE'
-id 'java'
+    id 'java'
+    id 'org.springframework.boot' version '{{config.springBootVersion}}'
+    id 'io.spring.dependency-management' version '1.1.7'
+    {{#config.isWar}}
+    id 'war'
+    {{/config.isWar}}
 }
 
 group = '{{config.group}}'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '{{config.javaVersion}}'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of({{config.javaVersion}})
+    }
+}
 
 repositories {
-mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-implementation 'org.springframework.boot:spring-boot-starter-web'
-implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-testImplementation 'org.springframework.boot:spring-boot-starter-test'
-{{#dependencies}}
-    implementation '{{groupId}}:{{artifactId}}:{{version}}'
-{{/dependencies}}
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+{{#config.lombokEnabled}}
+    implementation 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+{{/config.lombokEnabled}}
+{{#config.jwtAuthEnabled}}
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'io.jsonwebtoken:jjwt:0.11.5'
+    implementation 'org.springframework.security:spring-security-web'
+{{/config.jwtAuthEnabled}}
+{{#config.hibernateEnabled}}
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+{{/config.hibernateEnabled}}
+    implementation 'org.springframework.boot:spring-boot-starter-tomcat'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+{{#config.dependencies}}
+
+    implementation '{{groupId}}:{{artifactId}}{{#version}}:{{version}}{{/version}}'{{#scope}} // Scope: {{scope}}{{/scope}}
+{{/config.dependencies}}
 }
 
-test {
-useJUnitPlatform()
-}
-
-bootJar {
-baseName = '{{config.artifact}}'
-version =  version
-}
-
-dependencyManagement {
-imports {
-mavenBom "org.springframework.boot:spring-boot-dependencies:{{config.springBootVersion}}"
-}
+tasks.named('test') {
+    useJUnitPlatform()
 }

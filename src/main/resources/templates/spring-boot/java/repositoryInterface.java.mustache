@@ -1,0 +1,22 @@
+package {{packageName}}.repositories;
+
+{{#jpa}}
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+{{/jpa}}
+{{#mongodb}}
+import org.springframework.data.mongodb.repository.MongoRepository;
+{{/mongodb}}
+{{#cassandra}}
+import org.springframework.data.cassandra.repository.CassandraRepository;
+{{/cassandra}}
+{{#couchbase}}
+import org.springframework.data.couchbase.repository.CouchbaseRepository;
+{{/couchbase}}
+import {{packageName}}.domain.{{entity}};
+
+{{#jpa}}
+@Repository
+{{/jpa}}
+public interface {{entity}}Repository extends {{#jpa}}Jpa{{/jpa}}{{#mongodb}}Mongo{{/mongodb}}{{#cassandra}}Cassandra{{/cassandra}}{{#couchbase}}Couchbase{{/couchbase}}Repository<{{entity}}, {{idFieldType}}> {
+}

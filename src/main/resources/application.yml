@@ -4,9 +4,17 @@ server:
 spring:
   application:
     name: project-template-engine
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+      fail-on-ignored-properties: true
 
 mustache:
     template-directory: classpath:/templates/spring-boot/
 
 slack:
-    webhook-url: https://hooks.slack.com/services/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
+    webhook-url: ${SLACK_WEBHOOK_URL}
+
+api-keys:
+  gemini:
+    key: ${GEMINI_API_KEY}

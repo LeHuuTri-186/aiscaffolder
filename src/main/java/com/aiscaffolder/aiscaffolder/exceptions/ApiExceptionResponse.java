@@ -4,7 +4,6 @@ import lombok.*;
 import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 
 @Getter
 @Setter
@@ -13,7 +12,7 @@ import java.util.Map;
 @Builder
 public class ApiExceptionResponse {
 
-    private Map<String, String> message;
+    private String message;
 
     private HttpStatus status;
 

@@ -1,17 +1,15 @@
 package com.aiscaffolder.aiscaffolder.application.usecases;
 
-import com.aiscaffolder.aiscaffolder.application.services.GradleWrapperService;
-import com.aiscaffolder.aiscaffolder.application.services.MavenWrapperService;
-import com.aiscaffolder.aiscaffolder.application.services.ProjectGenerationService;
 import com.aiscaffolder.aiscaffolder.application.services.SlackNotificationService;
+import com.aiscaffolder.aiscaffolder.application.services.impl.GradleWrapperServiceImpl;
+import com.aiscaffolder.aiscaffolder.application.services.impl.MavenWrapperServiceImpl;
+import com.aiscaffolder.aiscaffolder.application.services.impl.ProjectGenerationServiceImpl;
 import com.aiscaffolder.aiscaffolder.domain.entities.Application;
 import com.aiscaffolder.aiscaffolder.domain.entities.Entity;
 import com.aiscaffolder.aiscaffolder.domain.enums.BuildTool;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -21,31 +19,20 @@ import java.util.Map;
 @Service
 public class ProjectGenerationUseCase {
 
-    private final ProjectGenerationService projectGenerationService;
-    private final MavenWrapperService mavenWrapperService;
-    private final GradleWrapperService gradleWrapperService;
+    private final ProjectGenerationServiceImpl projectGenerationServiceImpl;
+    private final MavenWrapperServiceImpl mavenWrapperServiceImpl;
+    private final GradleWrapperServiceImpl gradleWrapperServiceImpl;
     private final SlackNotificationService slackNotificationService;
 
-    public ProjectGenerationUseCase(ProjectGenerationService projectGenerationService, MavenWrapperService mavenWrapperService, GradleWrapperService gradleWrapperService, SlackNotificationService slackNotificationService) {
-        this.projectGenerationService = projectGenerationService;
-        this.mavenWrapperService = mavenWrapperService;
-        this.gradleWrapperService = gradleWrapperService;
+    public ProjectGenerationUseCase(ProjectGenerationServiceImpl projectGenerationServiceImpl, MavenWrapperServiceImpl mavenWrapperServiceImpl, GradleWrapperServiceImpl gradleWrapperServiceImpl, SlackNotificationService slackNotificationService) {
+        this.projectGenerationServiceImpl = projectGenerationServiceImpl;
+        this.mavenWrapperServiceImpl = mavenWrapperServiceImpl;
+        this.gradleWrapperServiceImpl = gradleWrapperServiceImpl;
 
         this.slackNotificationService = slackNotificationService;
     }
 
     public void execute(Application application, String outputDirectory) {
-        File directory = new File(outputDirectory);
-
-        if (!directory.exists()) {
-            if (directory.mkdirs()) {
-                log.info("Directory created: {}", outputDirectory);
-            } else {
-                log.info("Failed to create directory.");
-            }
-        } else {
-            log.info("Directory already exists: {}", outputDirectory);
-        }
         Map<String, String> files = new HashMap<>();
 
         generateProjectFiles(files, application.getEntities());
@@ -60,14 +47,13 @@ public class ProjectGenerationUseCase {
             updatedFiles.put(updatedKey, template);
         });
 
-
-        System.out.println("Generated Files: " + updatedFiles);
-
         // Generate Maven Wrapper
         try {
             if (application.getConfig().getBuildTool() == BuildTool.MAVEN) {
-                mavenWrapperService.generateMavenWrapper(outputDirectory);
-                files.put("pom.xml", "pom.xml.mustache");
+                mavenWrapperServiceImpl.generateWrapper(outputDirectory);
+                updatedFiles.put("pom.xml", "pom.xml.mustache");
+
+                log.info("Added pom.xml to the project");
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to generate Maven Wrapper", e);
@@ -76,29 +62,26 @@ public class ProjectGenerationUseCase {
         // Generate Gradle Wrapper
         try {
             if (application.getConfig().getBuildTool() == BuildTool.GRADLE) {
-                gradleWrapperService.generateGradleWrapper(outputDirectory);
-                files.put("build.gradle", "build.gradle.mustache");
+                gradleWrapperServiceImpl.generateGradleSettings(outputDirectory, application.getConfig().getArtifact());
+                gradleWrapperServiceImpl.generateWrapper(outputDirectory);
+                updatedFiles.put("build.gradle", "build.gradle.mustache");
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to generate Gradle Wrapper", e);
-        }
-
-        try {
-            projectGenerationService.generateProject(application, outputDirectory, updatedFiles);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        slackNotificationService.sendNotification(outputDirectory);
+        try {
+            projectGenerationServiceImpl.generateProject(application, outputDirectory, updatedFiles);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
-
 
     private void generateProjectFiles(Map<String, String> files, List<Entity> entities) {
         // Java source files
         generateJavaSourceFiles(files);
-
-        // Resources folder
-        generateJavaResources(files);
 
         // Test files
         generateTestFiles(files);
@@ -116,16 +99,7 @@ public class ProjectGenerationUseCase {
         files.put(".gitattributes", ".gitattributes");
     }
 
-    private void generateJavaResources(Map<String, String> files) {
-        files.put("src/main/resources/application.yml", "application.yml");
-    }
-
     private void generateJavaSourceFiles(Map<String, String> files) {
-        // files.put("pom.xml", "pom.xml");  // `pom.xml.mustache` template generates `pom.xml`
         files.put("src/main/java/{{basePackagePath}}/{{mainClassName}}.java", "MainApplication.java");
-    }
-
-    private void generateEntityFiles(Map<String, String> files, String entityName) {
-        files.put("src/main/java/{{basePackagePath}}/domain/" + entityName + ".java", "entity.java");
     }
 }

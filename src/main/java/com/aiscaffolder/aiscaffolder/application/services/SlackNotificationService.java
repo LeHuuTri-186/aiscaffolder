@@ -1,7 +1,7 @@
 package com.aiscaffolder.aiscaffolder.application.services;
 
 import com.aiscaffolder.aiscaffolder.config.SlackNotificationConfig;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -10,17 +10,19 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 
+@Slf4j
 @Service
 public class SlackNotificationService {
     private final SlackNotificationConfig config;
     private final RestTemplate restTemplate = new RestTemplate();
-
 
     public SlackNotificationService(SlackNotificationConfig config) {
         this.config = config;
     }
 
     public void sendNotification(String message) {
+        log.info("{}", config.getWebhookUrl());
+
         String url = config.getWebhookUrl();
 
         HttpHeaders headers = new HttpHeaders();

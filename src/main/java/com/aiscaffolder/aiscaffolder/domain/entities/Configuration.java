@@ -2,9 +2,8 @@ package com.aiscaffolder.aiscaffolder.domain.entities;
 
 import com.aiscaffolder.aiscaffolder.domain.enums.ApplicationType;
 import com.aiscaffolder.aiscaffolder.domain.enums.BuildTool;
+import com.aiscaffolder.aiscaffolder.domain.enums.CachingSolution;
 import com.aiscaffolder.aiscaffolder.domain.enums.DatabaseType;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import lombok.*;
 
 @Builder
@@ -25,9 +24,10 @@ public class Configuration {
     private String springBootVersion;
     private int javaVersion;
     private String group;
+    private CachingSolution caching;
     private String artifact;
     private String name;
     private String packageName;
-    private boolean ormEnabled;
-    private boolean lombokEnabled;
+    private Boolean hibernateEnabled;
+    private Boolean lombokEnabled;
 }

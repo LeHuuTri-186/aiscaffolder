@@ -1,16 +1,57 @@
-{{#dataSources}}
-    datasource-{{dbName}}:
-        url: jdbc:{{dbType}}://{{host}}:{{port}}/{{dbName}}
-        username: {{username}}
-        password: {{password}}
-        driver-class-name: {{driver}}
-{{/dataSources}}
-
-{{#environmentVariables}}
-    {{key}}: {{value}}
-{{/environmentVariables}}
-
-# Custom properties
-{{#customProperties}}
-    {{key}}: {{value}}
-{{/customProperties}}
+spring:
+    profiles:
+        active: dev
+{{#name}}
+    application: {{name}}
+{{/name}}
+{{#dbConfig}}
+{{#isDatasource}}
+    datasource:
+        hikari:
+            maximum-pool-size: 10
+            minimum-idle: 5
+    {{#isMySql}}
+        url: jdbc:mysql://localhost:3306/mydb
+        username: root
+        password: root
+        driver-class-name: com.mysql.cj.jdbc.Driver
+    {{/isMySql}}
+    {{#isPostgres}}
+        url: jdbc:postgresql://localhost:5432/mydb
+        username: postgres
+        password: password
+        driver-class-name: org.postgresql.Driver
+    {{/isPostgres}}
+    {{#isMariaDb}}
+        url: jdbc:mariadb://localhost:3306/mydb
+        username: root
+        password: root
+        driver-class-name: org.mariadb.jdbc.Driver
+    {{/isMariaDb}}
+    {{#isMssql}}
+        url: jdbc:sqlserver://localhost:1433;databaseName=mydb
+        username: sa
+        password: password
+        driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    {{/isMssql}}
+    {{#isOracle}}
+        url: jdbc:oracle:thin:@localhost:1521:mydb
+        username: system
+        password: password
+        driver-class-name: oracle.jdbc.OracleDriver
+    {{/isOracle}}
+{{/isDatasource}}
+{{#isData}}
+    data:
+    {{#isCouchBase}}
+    {{/isCouchBase}}
+    {{#isCassandra}}
+    {{/isCassandra}}
+    {{#isMongoDb}}
+    {{/isMongoDb}}
+{{/isData}}
+{{/dbConfig}}
+{{#serverPort}}
+server:
+    port: {{serverPort}}
+{{/serverPort}}

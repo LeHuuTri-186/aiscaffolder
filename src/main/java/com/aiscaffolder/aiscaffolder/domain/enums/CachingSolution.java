@@ -6,13 +6,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @AllArgsConstructor
-@NoArgsConstructor
 @Getter
-public enum DatabaseType {
-    SQL("sql"),
-    CASSANDRA("cassandra"),
-    COUCHBASE("couchbase"),
-    MONGODB("mongodb"),
+@NoArgsConstructor
+public enum CachingSolution {
+    EHCACHE("ehcache"),
+    REDIS("redis"),
+    HAZELCAST("hazelcast"),
     NO("no");
 
     @JsonValue

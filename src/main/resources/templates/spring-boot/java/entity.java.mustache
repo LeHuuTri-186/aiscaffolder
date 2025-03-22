@@ -1,177 +1,218 @@
-package {{config.packageName}}.domain;
+package {{packageName}}.domain;
 
+{{#lombokEnabled}}
+import lombok.Data;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+{{/lombokEnabled}}
+{{#hibernateEnabled}}
 import jakarta.persistence.*;
+{{/hibernateEnabled}}
 import java.util.*;
+import java.time.LocalDate;
 
+{{#lombokEnabled}}
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+{{/lombokEnabled}}
+{{#hibernateEnabled}}
 @Entity
-public class {{entity.entityName}} {
-
-@Id
-@GeneratedValue(strategy = GenerationType.IDENTITY)
-private Long id;
-
-{{#entity.entityFields}}
+@Table(name="{{nameLower}}s")
+{{/hibernateEnabled}}
+{{#couchbase}}
+@Document
+{{/couchbase}}
+{{#cassandra}}
+@Table("{{nameLower}}s")
+{{/cassandra}}
+{{#mongodb}}
+@Document(collection = "{{nameLower}}s")
+{{/mongodb}}
+public class {{name}} {
+{{#hibernateEnabled}}
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+{{/hibernateEnabled}}
+    private {{idFieldType}} {{idFieldName}};
+{{#fields}}
     private {{fieldType}} {{fieldName}};
-{{/entity.entityFields}}
+{{/fields}}
+{{#relationships}}
+    {{#isSourceClass}}
+    {{#isManyToOne}}
+    {{#hibernateEnabled}}
+    @ManyToOne
+    {{/hibernateEnabled}}
+    private {{targetClass}} {{targetClassLower}};
+    {{/isManyToOne}}
+    {{#isOneToOne}}
+    {{#hibernateEnabled}}
+    @OneToOne({{#isBidirectional}}mappedBy="{{nameLower}}", {{/isBidirectional}}cascade = CascadeType.ALL)
+    {{/hibernateEnabled}}
+    private {{targetClass}} {{targetClassLower}};
+    {{/isOneToOne}}
+    {{#isOneToMany}}
+    {{#hibernateEnabled}}
+    @OneToMany({{#isBidirectional}}mappedBy="{{nameLower}}", {{/isBidirectional}}cascade = CascadeType.ALL)
+    {{/hibernateEnabled}}
+    private List<{{targetClass}}> {{targetClassLower}}s;
+    {{/isOneToMany}}
+    {{#isManyToMany}}
+    @ManyToMany({{#isBirectional}}mappedBy="{{nameLower}}s", {{/isBirectional}}cascade = CascadeType.ALL)
+    @JoinTable(
+    name = "{{nameLower}}_{{targetClassLower}}",
+    joinColumns = @JoinColumn(name = "{{nameLower}}_id"),
+    inverseJoinColumns = @JoinColumn(name = "{{targetClassLower}}_id")
+    )
+    private List<{{targetClass}}> {{targetClassLower}}s;
+    {{/isManyToMany}}
+    {{/isSourceClass}}
+    {{#isBidirectional}}
+    {{#isTargetClass}}
+    {{#isManyToOne}}
+    {{#hibernateEnabled}}
+    @OneToMany({{#isBidirectional}}mappedBy="{{nameLower}}", {{/isBidirectional}}cascade = CascadeType.ALL)
+    private List<{{sourceClass}}> {{sourceClassLower}}s;
+    {{/hibernateEnabled}}
+    {{/isManyToOne}}
+    {{#isOneToOne}}
+    {{#hibernateEnabled}}
+    @OneToOne
+    {{/hibernateEnabled}}
+    private {{sourceClass}} {{sourceClassLower}};
+    {{/isOneToOne}}
+    {{#isOneToMany}}
+    @ManyToOne
+    private {{sourceClass}} {{sourceClassLower}};
+    {{/isOneToMany}}
+    {{#isManyToMany}}
+    @ManyToMany(cascade = CascadeType.ALL)
+    private List<{{sourceClass}}> {{sourceClassLower}}s;
+    {{/isManyToMany}}
+    {{/isTargetClass}}
+    {{/isBidirectional}}
+{{/relationships}}
+{{^lombokEnabled}}
 
-public {{entity.entityName}}() {}
+    public {{name}}() {}
 
-// Getters and Setters
-public Long getId() {
-return id;
-}
+    {{#hasField}}
+    public {{name}}({{idFieldType}} {{idFieldName}}, {{#fields}}{{fieldType}} {{fieldName}}{{^isLastField}}, {{/isLastField}}{{/fields}}) {
+        this.{{idFieldName}} = {{idFieldName}};
+        {{#fields}}
+        this.{{fieldName}} = {{fieldName}};
+        {{/fields}}
+    }
+    {{/hasField}}
 
-public void setId(Long id) {
-this.id = id;
-}
+    public {{idFieldType}} get{{idFieldNameUpper}}() {
+        return {{idFieldName}};
+    }
 
-{{#entity.entityFields}}
+    public void set{{idFieldNameUpper}}({{idFieldType}} {{idFieldName}}) {
+        this.{{idFieldName}} = {{idFieldName}};
+    }
+{{/lombokEnabled}}
+{{^lombokEnabled}}
+{{#relationships}}
+{{#isSourceClass}}
+    {{#isManyToOne}}
+
+    public {{targetClass}} get{{targetClass}}() {
+        return {{targetClassLower}};
+    }
+
+    public void set{{targetClass}}({{targetClass}} {{targetClassLower}}) {
+        this.{{targetClassLower}} = {{targetClassLower}};
+    }
+    {{/isManyToOne}}
+    {{#isOneToOne}}
+
+    public {{targetClass}} get{{targetClass}}() {
+        return {{targetClassLower}};
+    }
+
+    public void set{{targetClass}}({{targetClass}} {{targetClassLower}}) {
+        this.{{targetClassLower}} = {{targetClassLower}};
+    }
+    {{/isOneToOne}}
+    {{#isOneToMany}}
+
+    public List<{{targetClass}}> get{{targetClass}}s() {
+        return {{targetClassLower}}s;
+    }
+
+    public void set{{targetClass}}s(List<{{targetClass}}> {{targetClassLower}}s) {
+        this.{{targetClassLower}}s = {{targetClassLower}}s;
+    }
+    {{/isOneToMany}}
+    {{#isManyToMany}}
+
+    public List<{{targetClass}}> get{{targetClass}}s() {
+        return {{targetClassLower}}s;
+    }
+
+    public void set{{targetClass}}s(List<{{targetClass}}> {{targetClassLower}}s) {
+        this.{{targetClassLower}}s = {{targetClassLower}}s;
+    }
+    {{/isManyToMany}}
+{{/isSourceClass}}
+{{#isBidirectional}}
+{{#isTargetClass}}
+    {{#isManyToOne}}
+
+    public List<{{sourceClass}}> get{{sourceClass}}s() {
+        return {{sourceClassLower}}s;
+    }
+
+    public void set{{sourceClass}}s(List<{{sourceClass}}> {{sourceClassLower}}s) {
+        this.{{sourceClassLower}}s = {{sourceClassLower}}s;
+    }
+    {{/isManyToOne}}
+    {{#isOneToOne}}
+
+    public {{sourceClass}} get{{sourceClass}}() {
+        return {{sourceClassLower}};
+    }
+
+    public void set{{sourceClass}}({{sourceClass}} {{sourceClassLower}}) {
+        this.{{sourceClassLower}} = {{sourceClassLower}};
+    }
+    {{/isOneToOne}}
+    {{#isOneToMany}}
+
+    public {{sourceClass}} get{{sourceClass}}() {
+        return {{sourceClassLower}};
+    }
+
+    public void set{{sourceClass}}({{sourceClass}} {{sourceClassLower}}) {
+        this.{{sourceClassLower}} = {{sourceClassLower}};
+    }
+    {{/isOneToMany}}
+    {{#isManyToMany}}
+    public List<{{sourceClass}}> get{{sourceClass}}s() {
+        return {{sourceClassLower}}s;
+    }
+
+    public void set{{sourceClass}}s(List<{{sourceClass}}> {{sourceClassLower}}s) {
+        this.{{sourceClassLower}}s = {{sourceClassLower}}s;
+    }
+    {{/isManyToMany}}
+{{/isTargetClass}}
+{{/isBidirectional}}
+{{/relationships}}
+    {{#fields}}
+
     public {{fieldType}} get{{fieldNameUpper}}() {
-    return {{fieldName}};
+        return {{fieldName}};
     }
 
     public void set{{fieldNameUpper}}({{fieldType}} {{fieldName}}) {
-    this.{{fieldName}} = {{fieldName}};
+        this.{{fieldName}} = {{fieldName}};
     }
-{{/entity.entityFields}}
-
-{{#relationships}}
-    {{#isOneToMany}}
-        {{#isBidirectional}}
-            @OneToMany(mappedBy = "{{targetEntityVarName}}", cascade = CascadeType.ALL, orphanRemoval = true)
-            private List<{{targetEntity}}> {{targetEntityVarNamePlural}} = new ArrayList<>();
-        {{/isBidirectional}}
-        {{#isUnidirectional}}
-            @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-            @JoinColumn(name = "{{fromEntityField}}")
-            private List<{{targetEntity}}> {{targetEntityVarNamePlural}} = new ArrayList<>();
-        {{/isUnidirectional}}
-    {{/isOneToMany}}
-
-    {{#isManyToOne}}
-        @ManyToOne
-        {{#isUnidirectional}}
-            @JoinColumn(name = "{{toEntityField}}", nullable = false)
-        {{/isUnidirectional}}
-        private {{targetEntity}} {{targetEntityVarName}};
-    {{/isManyToOne}}
-
-    {{#isManyToMany}}
-        {{#isBidirectional}}
-            @ManyToMany
-            @JoinTable(
-            name = "{{fromEntity}}_{{toEntity}}", // Name of the join table
-            joinColumns = @JoinColumn(name = "{{fromEntity}}_id"), // FK for Student
-            inverseJoinColumns = @JoinColumn(name = "{{toEntity}}_id") // FK for Course
-            )
-            private List<{{targetEntity}}> {{targetEntityVarNamePlural}} = new ArrayList<>();
-        {{/isBidirectional}}
-        {{#isUnidirectional}}
-            @ManyToMany
-            @JoinTable(
-            name = "{{entity.entityName}}_{{targetEntity}}",
-            joinColumns = @JoinColumn(name = "{{entity.entityName}}_id"),
-            inverseJoinColumns = @JoinColumn(name = "{{targetEntity}}_id")
-            )
-            private List<{{targetEntity}}> {{targetEntityVarNamePlural}} = new ArrayList<>();
-        {{/isUnidirectional}}
-    {{/isManyToMany}}
-
-    {{#isOneToOne}}
-        {{#isBidirectional}}
-            @OneToOne(mappedBy = "{{targetEntityVarName}}", cascade = CascadeType.ALL)
-            private {{targetEntity}} {{targetEntityVarName}};
-        {{/isBidirectional}}
-        {{#isUnidirectional}}
-            @OneToOne(cascade = CascadeType.ALL)
-            @JoinColumn(name = "{{toEntityField}}")
-            private {{targetEntity}} {{targetEntityVarName}};
-        {{/isUnidirectional}}
-    {{/isOneToOne}}
-
-    {{#isInverseBidirectional}}
-        // Inverse side of bidirectional relationship
-        {{#isOneToMany}}
-            @ManyToOne
-            @JoinColumn(name = "{{toEntityField}}")
-            private {{targetEntity}} {{targetEntityVarName}};
-        {{/isOneToMany}}
-
-        {{#isManyToMany}}
-            private List<{{targetEntity}}> {{targetEntityVarNamePlural}} = new ArrayList<>();
-        {{/isManyToMany}}
-
-        {{#isOneToOne}}
-            @OneToOne
-            @JoinColumn(name = "{{fromEntityField}}")
-            private {{targetEntity}} {{targetEntityVarName}};
-        {{/isOneToOne}}
-    {{/isInverseBidirectional}}
-{{/relationships}}
-
-{{#relationships}}
-    {{#isOneToMany}}
-        {{^isInverseBidirectional}}
-            public List<{{targetEntity}}> get{{targetEntityVarNameUpperPlural}}() {
-            return {{targetEntityVarNamePlural}};
-            }
-
-            public void set{{targetEntityVarNameUpperPlural}}(List<{{targetEntity}}> {{targetEntityVarNamePlural}}) {
-            this.{{targetEntityVarNamePlural}} = {{targetEntityVarNamePlural}};
-            }
-        {{/isInverseBidirectional}}
-    {{/isOneToMany}}
-
-    {{#isManyToOne}}
-        public {{targetEntity}} get{{targetEntityVarNameUpper}}() {
-        return {{targetEntityVarName}};
-        }
-
-        public void set{{targetEntityVarNameUpper}}({{targetEntity}} {{targetEntityVarName}}) {
-        this.{{targetEntityVarName}} = {{targetEntityVarName}};
-        }
-    {{/isManyToOne}}
-
-    {{#isOneToOne}}
-        public {{targetEntity}} get{{targetEntityVarNameUpper}}() {
-        return {{targetEntityVarName}};
-        }
-
-        public void set{{targetEntityVarNameUpper}}({{targetEntity}} {{targetEntityVarName}}) {
-        this.{{targetEntityVarName}} = {{targetEntityVarName}};
-        }
-    {{/isOneToOne}}
-
-    {{#isManyToMany}}
-        public List<{{targetEntity}}> get{{targetEntityVarNameUpperPlural}}() {
-        return {{targetEntityVarNamePlural}};
-        }
-
-        public void set{{targetEntityVarNameUpperPlural}}(List<{{targetEntity}}> {{targetEntityVarNamePlural}}) {
-        this.{{targetEntityVarNamePlural}} = {{targetEntityVarNamePlural}};
-        }
-    {{/isManyToMany}}
-
-    {{#isInverseBidirectional}}
-        {{#isOneToMany}}
-            public {{targetEntity}} get{{targetEntityVarNameUpper}}() {
-            return {{targetEntityVarName}};
-            }
-
-            public void set{{targetEntityVarNameUpper}}({{targetEntity}} {{targetEntityVarName}}) {
-            this.{{targetEntityVarName}} = {{targetEntityVarName}};
-            }
-        {{/isOneToMany}}
-
-        {{#isManyToOne}}
-            public {{targetEntity}} get{{targetEntityVarNameUpper}}() {
-            return {{targetEntityVarName}};
-            }
-
-            public void set{{targetEntityVarNameUpper}}({{targetEntity}} {{targetEntityVarName}}) {
-            this.{{targetEntityVarName}} = {{targetEntityVarName}};
-            }
-        {{/isManyToOne}}
-    {{/isInverseBidirectional}}
-{{/relationships}}
+    {{/fields}}
+{{/lombokEnabled}}
 }

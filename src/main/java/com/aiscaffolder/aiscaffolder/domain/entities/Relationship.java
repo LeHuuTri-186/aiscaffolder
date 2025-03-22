@@ -13,6 +13,5 @@ public class Relationship {
     private RelationshipType type;
     private String fromEntity;
     private String toEntity;
-    private String fromEntityField;
-    private String toEntityField;
+    private Boolean isBidirectional;
 }
