@@ -39,16 +39,13 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
 
     public void generateProject(Application application, String outputDir, Map<String, String> files) throws Exception {
         for (Map.Entry<String, String> fileEntry : files.entrySet()) {
-            // Resolve placeholders in file paths and template names
             String relativeFilePath = resolvePlaceholders(fileEntry.getKey(), application.getConfig());
             String templateName = fileEntry.getValue();
 
-            System.out.println(templateName);
+            log.debug(templateName);
 
-            // Render the template
             String fileContent = renderTemplate(TEMPLATE_PATH + templateName, application);
 
-            // Write the rendered content to the resolved file path
             writeFile(outputDir, relativeFilePath, fileContent);
         }
         generateRepositories(application.getEntities(), application.getConfig(), outputDir);

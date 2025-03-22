@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: project-template-engine
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+      fail-on-ignored-properties: true
 
 mustache:
     template-directory: classpath:/templates/spring-boot/

@@ -39,9 +39,9 @@ public class GradleWrapperServiceImpl implements WrapperService {
 
             int exitCode = process.waitFor();
             if (exitCode == 0) {
-                log.info("Gradle Wrapper generated successfully in: {}", outputDir);
+                log.debug("Gradle Wrapper generated successfully in: {}", outputDir);
             } else {
-                log.info("Failed to generate Gradle Wrapper. Exit code: {}", exitCode);
+                log.debug("Failed to generate Gradle Wrapper. Exit code: {}", exitCode);
             }
 
         } catch (IOException | InterruptedException e) {

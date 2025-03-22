@@ -5,14 +5,12 @@ import com.aiscaffolder.projecttemplateengine.domain.dto.ApplicationDto;
 import com.aiscaffolder.projecttemplateengine.domain.dto.EntityDto;
 import com.aiscaffolder.projecttemplateengine.domain.dto.EntityFieldDto;
 import com.aiscaffolder.projecttemplateengine.domain.entities.Application;
-import com.aiscaffolder.projecttemplateengine.domain.entities.Entity;
 import com.aiscaffolder.projecttemplateengine.exceptions.DuplicateEntity;
 import com.aiscaffolder.projecttemplateengine.exceptions.InvalidEntity;
 import com.aiscaffolder.projecttemplateengine.exceptions.UnsupportedJavaVersion;
 import com.aiscaffolder.projecttemplateengine.mappers.Mapper;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.springframework.boot.system.JavaVersion;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -50,7 +48,6 @@ public class ProjectGenerationController {
         validateEntities(applicationDto.getEntities());
         validateJavaVersion(applicationDto.getConfig().getJavaVersion());
 
-        // Tạo thư mục riêng biệt dựa vào timestamp và UUID
         String timestamp = String.valueOf(System.currentTimeMillis());
         String uuid = UUID.randomUUID().toString().substring(0, 8);
         String outputDirectory = "output/project-" + timestamp + "-" + uuid;
@@ -90,7 +87,7 @@ public class ProjectGenerationController {
     private void validateEntities(List<EntityDto> entityDtos) {
         Set<String> nameSet = new HashSet<>();
 
-        entityDtos.stream().forEach(entity -> {
+        entityDtos.forEach(entity -> {
             if (!nameSet.add(entity.getEntityName())) {
                 throw new DuplicateEntity("Duplicate entity name found: " + entity.getEntityName());
             }
@@ -109,7 +106,7 @@ public class ProjectGenerationController {
     private void validateEntityFields(List<EntityFieldDto> entityFieldDtos) {
         Set<String> nameSet = new HashSet<>();
 
-        entityFieldDtos.stream().forEach(entity -> {
+        entityFieldDtos.forEach(entity -> {
             if (null == entity.getFieldName() || entity.getFieldName().isEmpty()) {
                 throw new InvalidEntity("Invalid field name value: " + entity.getFieldName());
             }

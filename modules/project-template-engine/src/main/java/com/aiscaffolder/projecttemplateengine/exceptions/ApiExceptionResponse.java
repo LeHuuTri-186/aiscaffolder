@@ -13,7 +13,7 @@ import java.util.Map;
 @Builder
 public class ApiExceptionResponse {
 
-    private Map<String, String> message;
+    private String message;
 
     private HttpStatus status;
 

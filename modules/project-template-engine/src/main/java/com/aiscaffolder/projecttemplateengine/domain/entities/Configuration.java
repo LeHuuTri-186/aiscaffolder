@@ -2,6 +2,7 @@ package com.aiscaffolder.projecttemplateengine.domain.entities;
 
 import com.aiscaffolder.projecttemplateengine.domain.enums.ApplicationType;
 import com.aiscaffolder.projecttemplateengine.domain.enums.BuildTool;
+import com.aiscaffolder.projecttemplateengine.domain.enums.CachingSolution;
 import com.aiscaffolder.projecttemplateengine.domain.enums.DatabaseType;
 import lombok.*;
 
@@ -23,6 +24,7 @@ public class Configuration {
     private String springBootVersion;
     private int javaVersion;
     private String group;
+    private CachingSolution caching;
     private String artifact;
     private String name;
     private String packageName;

@@ -1,20 +1,18 @@
 package com.aiscaffolder.projecttemplateengine.application.services;
 
 import java.io.*;
-import java.nio.file.*;
-import java.util.zip.*;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import static java.nio.file.Files.walk;
-
+@Slf4j
 @Service
 public class ZipProjectService {
 
     public void zipProject(String sourceDirPath, String zipFilePath) throws IOException {
         File sourceDir = new File(sourceDirPath);
         if (!sourceDir.exists()) {
-            System.out.println("❌ Error: The specified source directory does not exist: " + sourceDirPath);
+            log.error("[Error][zipService]: The specified source directory does not exist: {}", sourceDirPath);
             return;
         }
 
@@ -36,14 +34,13 @@ public class ZipProjectService {
             }
 
             processBuilder.directory(new File(".")); // Set working directory
-            processBuilder.inheritIO(); // Redirect output to console
             Process process = processBuilder.start();
             int exitCode = process.waitFor();
 
             if (exitCode == 0) {
-                System.out.println("✅ ZIP created successfully: " + zipFilePath);
+                log.debug("ZIP created successfully: {}", zipFilePath);
             } else {
-                System.out.println("❌ Failed to create ZIP. Exit code: " + exitCode);
+                log.error("Failed to create ZIP. Exit code: {}", exitCode);
             }
 
         } catch (IOException | InterruptedException e) {
