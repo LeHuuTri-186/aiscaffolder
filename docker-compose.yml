@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  aiscaffolder:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+    volumes:
+      - ./output:/app/output:rw
+    user: "1000:1000"
+    restart: unless-stopped 
