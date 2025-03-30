@@ -10,6 +10,8 @@ import java.util.List;
 public interface GenerateProjectService {
     void generateProject();
     void generateWrapper();
+    void generateDockerCompose(Configuration configuration, String outputDir);
+    void generateCachingFiles(List<Entity> entities, Configuration configuration, String outputDir);
     void generateDependencies(List<Dependency> dependencies, Configuration configuration, String outputDir);
     void generateControllers(List<Entity> entities, Configuration configuration, String outputDir);
     void generateServices(List<Entity> entities, Configuration configuration, String outputDir);

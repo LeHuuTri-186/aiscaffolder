@@ -1,0 +1,82 @@
+services:
+{{#isMysql}}
+    mysql:
+        image: mysql:8.0
+        container_name: mysql_container
+        restart: always
+        environment:
+            MYSQL_ROOT_USER: root
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: {{name}}
+        ports:
+            - "3306:3306"
+        volumes:
+            - mysql_data:/var/lib/mysql
+{{/isMysql}}
+{{#isMssql}}
+    mssql:
+        image: mcr.microsoft.com/mssql/server:2019-latest
+        container_name: mssql_container
+        ports:
+            - "1433:1433"
+        environment:
+            SA_PASSWORD: "password"
+            ACCEPT_EULA: "Y"
+            MSSQL_DATABASE: {{name}}
+        restart: always
+{{/isMssql}}
+{{#isMariaDb}}
+    mariadb:
+        image: mariadb:latest
+        container_name: mariadb_container
+        ports:
+            - "3306:3306"
+        environment:
+            MARIADB_ROOT_PASSWORD: root
+            MARIADB_DATABASE: {{name}}
+            MARIADB_USER: root
+            MARIADB_PASSWORD: root
+        volumes:
+            - mariadb_data:/var/lib/mysql
+        restart: always
+{{/isMariaDb}}
+{{#isPostgres}}
+    postgres:
+        image: postgres:latest
+        container_name: postgres_container
+        ports:
+            - "5432:5432"
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: password
+            POSTGRES_DB: {{name}}
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        restart: always
+{{/isPostgres}}
+{{#isOracle}}
+    oracle:
+        image: container-registry.oracle.com/database/express:21.3.0-xe
+        container_name: oracle_container
+        ports:
+            - "1521:1521"
+        environment:
+            ORACLE_PWD: password
+            ORACLE_DATABASE: {{name}}
+        volumes:
+            - oracle_data:/opt/oracle/oradata
+        restart: always
+{{/isOracle}}
+volumes:
+{{#isMysql}}
+    mysql_data:
+{{/isMysql}}
+{{#isMariaDb}}
+    mariadb_data:
+{{/isMariaDb}}
+{{#isPostgres}}
+    postgres_data:
+{{/isPostgres}}
+{{#isOracle}}
+    oracle_data:
+{{/isOracle}}

@@ -3,6 +3,7 @@ package com.aiscaffolder.aiscaffolder.application.services.impl;
 import com.aiscaffolder.aiscaffolder.application.services.GenerateProjectService;
 import com.aiscaffolder.aiscaffolder.application.services.ZipProjectService;
 import com.aiscaffolder.aiscaffolder.domain.entities.*;
+import com.aiscaffolder.aiscaffolder.domain.enums.CachingSolution;
 import com.aiscaffolder.aiscaffolder.domain.enums.DatabaseType;
 import com.aiscaffolder.aiscaffolder.domain.enums.RelationshipType;
 import com.github.mustachejava.Mustache;
@@ -51,6 +52,8 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
 
             writeFile(outputDir, relativeFilePath, fileContent);
         }
+
+        generateDockerCompose(application.getConfig(), outputDir);
         generateRepositories(application.getEntities(), application.getConfig(), outputDir);
 
         generateConfigurations(application.getConfig(), outputDir);
@@ -103,7 +106,59 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
     }
 
     @Override
+    public void generateDockerCompose(Configuration config, String outputDir) {
+
+        if (config.getDatabaseType() == DatabaseType.NO) {
+            return;
+        }
+
+        Map<String, Object> configMap = new HashMap<>();
+        configMap.put("dbConfig", true);
+        configMap.put("name", config.getName());
+
+        if (config.getDatabaseType() == DatabaseType.SQL) {
+            configMap.put("isDatasource", true);
+            configMap.put("isMySql", config.getProdDatabaseType().equalsIgnoreCase("mysql"));
+            configMap.put("isOracle", config.getProdDatabaseType().equalsIgnoreCase("oracle"));
+            configMap.put("isPostgres", config.getProdDatabaseType().equalsIgnoreCase("postgresql"));
+            configMap.put("isMssql", config.getProdDatabaseType().equalsIgnoreCase("mssql"));
+            configMap.put("isMariaDb", config.getProdDatabaseType().equalsIgnoreCase("mariadb"));
+        } else {
+            configMap.put("isData", false);
+        }
+
+        try {
+            writeFile(outputDir, "docker-compose.yml", renderTemplate(TEMPLATE_PATH + "docker-compose.yml", configMap));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void generateCachingFiles(List<Entity> entities, Configuration configuration, String outputDir) {
+        if (CachingSolution.NO == configuration.getCaching()) {
+            return;
+        }
+
+        Map<String, Object> cachingContext = new HashMap<>();
+
+        cachingContext.put("entities", entities);
+        cachingContext.put(configuration.getCaching().getValue(), true);
+
+        String configContent = renderTemplate(TEMPLATE_PATH + "ehcache.xml.mustache", cachingContext);
+
+        String entityFilePath = "src/main/resources" + "ehcache.xml.java";
+
+        try {
+            writeFile(outputDir, entityFilePath, configContent);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public void generateDependencies(List<Dependency> dependencies, Configuration configuration, String outputDir) {
+
     }
 
     @Override
@@ -138,6 +193,8 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
             entityRepositoryContext.put("packageName", configuration.getPackageName());
             entityRepositoryContext.put("idFieldType", entity.getIdFieldType());
 
+            entityRepositoryContext.put(configuration.getCaching().getValue(), true);
+
             String content = renderTemplate(TEMPLATE_PATH + "service.java.mustache", entityRepositoryContext);
 
             String entityFilePath = "src/main/java/" + configuration.getPackageName().replace('.', '/')
@@ -155,9 +212,7 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
         for (Entity entity : entities) {
             Map<String, Object> entityRepositoryContext = new HashMap<>();
 
-            if (configuration.getHibernateEnabled()) {
-                entityRepositoryContext.put("jpa", entity.getEntityName());
-            }
+            entityRepositoryContext.put("jpa", configuration.getHibernateEnabled());
 
             entityRepositoryContext.put("entity", entity.getEntityName());
             entityRepositoryContext.put("packageName", configuration.getPackageName());
@@ -185,37 +240,7 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
 
             List<Map<String, Object>> relationshipContexts = new ArrayList<>();
 
-            relationships.forEach(relationship -> {
-                Map<String, Object> relationshipContext = new HashMap<>();
-                if (relationship.getType() == RelationshipType.ONE_TO_ONE) {
-                    relationshipContext.put("isOneToOne", true);
-                } else if (relationship.getType() == RelationshipType.MANY_TO_ONE) {
-                    relationshipContext.put("isManyToOne", true);
-                } else if (relationship.getType() == RelationshipType.ONE_TO_MANY) {
-                    relationshipContext.put("isOneToMany", true);
-                } else if (relationship.getType() == RelationshipType.MANY_TO_MANY) {
-                    relationshipContext.put("isManyToMany", true);
-                }
-
-                relationshipContext.put("targetClass", relationship.getToEntity());
-                relationshipContext.put("sourceClass", relationship.getFromEntity());
-                relationshipContext.put("sourceClassLower", relationship.getFromEntity().toLowerCase());
-                relationshipContext.put("targetClassLower", relationship.getToEntity().toLowerCase());
-                relationshipContext.put("isBidirectional", relationship.getIsBidirectional());
-                relationshipContext.put("nameLower",entity.getEntityName().toLowerCase());
-
-                if (relationship.getFromEntity().equals(entity.getEntityName())) {
-                    relationshipContext.put("isSourceClass", true);
-                }
-
-                if (relationship.getToEntity().equals(entity.getEntityName())) {
-                    relationshipContext.put("isTargetClass", true);
-                }
-
-                relationshipContexts.add(relationshipContext);
-
-                log.info("relationshipContexts: {}", relationshipContext);
-            });
+            handleEntitiesRelationships(relationships, entity, relationshipContexts);
 
             entityContext.put("relationships", relationshipContexts);
 
@@ -230,6 +255,38 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    private void handleEntitiesRelationships(List<Relationship> relationships, Entity entity, List<Map<String, Object>> relationshipContexts) {
+        relationships.forEach(relationship -> {
+            Map<String, Object> relationshipContext = new HashMap<>();
+            if (relationship.getType() == RelationshipType.ONE_TO_ONE) {
+                relationshipContext.put("isOneToOne", true);
+            } else if (relationship.getType() == RelationshipType.MANY_TO_ONE) {
+                relationshipContext.put("isManyToOne", true);
+            } else if (relationship.getType() == RelationshipType.ONE_TO_MANY) {
+                relationshipContext.put("isOneToMany", true);
+            } else if (relationship.getType() == RelationshipType.MANY_TO_MANY) {
+                relationshipContext.put("isManyToMany", true);
+            }
+
+            relationshipContext.put("targetClass", relationship.getToEntity());
+            relationshipContext.put("sourceClass", relationship.getFromEntity());
+            relationshipContext.put("sourceClassLower", relationship.getFromEntity().toLowerCase());
+            relationshipContext.put("targetClassLower", relationship.getToEntity().toLowerCase());
+            relationshipContext.put("isBidirectional", relationship.getIsBidirectional());
+            relationshipContext.put("nameLower", entity.getEntityName().toLowerCase());
+
+            if (relationship.getFromEntity().equals(entity.getEntityName())) {
+                relationshipContext.put("isSourceClass", true);
+            }
+
+            if (relationship.getToEntity().equals(entity.getEntityName())) {
+                relationshipContext.put("isTargetClass", true);
+            }
+
+            relationshipContexts.add(relationshipContext);
+        });
     }
 
     private void generateEntityContext(Configuration configuration, Entity entity, Map<String, Object> entityContext) {
