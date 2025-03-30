@@ -52,8 +52,6 @@ public class ProjectGenerationUseCase {
             if (application.getConfig().getBuildTool() == BuildTool.MAVEN) {
                 mavenWrapperServiceImpl.generateWrapper(outputDirectory);
                 updatedFiles.put("pom.xml", "pom.xml.mustache");
-
-                log.info("Added pom.xml to the project");
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to generate Maven Wrapper", e);
@@ -65,7 +63,6 @@ public class ProjectGenerationUseCase {
                 log.info("Added gradle to the project");
                 gradleWrapperServiceImpl.generateGradleSettings(outputDirectory, application.getConfig().getArtifact());
                 gradleWrapperServiceImpl.generateWrapper(outputDirectory);
-                updatedFiles.put("build.gradle", "build.gradle.mustache");
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to generate Gradle Wrapper", e);
@@ -81,9 +78,6 @@ public class ProjectGenerationUseCase {
     }
 
     private void generateProjectFiles(Map<String, String> files, List<Entity> entities) {
-        // Java source files
-        generateJavaSourceFiles(files);
-
         // Test files
         generateTestFiles(files);
 
@@ -98,9 +92,5 @@ public class ProjectGenerationUseCase {
     private void generateGitFiles(Map<String, String> files) {
         files.put(".gitignore", ".gitignore");
         files.put(".gitattributes", ".gitattributes");
-    }
-
-    private void generateJavaSourceFiles(Map<String, String> files) {
-        files.put("src/main/java/{{basePackagePath}}/{{mainClassName}}.java", "MainApplication.java");
     }
 }

@@ -1,4 +1,16 @@
 services:
+    {{nameLower}}:
+        build: .
+        container_name: {{nameLower}}
+        ports:
+            - "{{port}}:8080"
+        volumes:
+            - app_data:/app
+    {{#dbConfig}}
+        depends_on:
+            - {{#isMysql}}mysql{{/isMysql}}{{#isMssql}}mssql{{/isMssql}}{{#isMariaDb}}mariadb{{/isMariaDb}}{{#isPostgres}}postgres{{/isPostgres}}{{#isOracle}}oracle{{/isOracle}}
+    {{/dbConfig}}
+        restart: unless-stopped
 {{#isMysql}}
     mysql:
         image: mysql:8.0
@@ -68,6 +80,7 @@ services:
         restart: always
 {{/isOracle}}
 volumes:
+    app_data:
 {{#isMysql}}
     mysql_data:
 {{/isMysql}}
