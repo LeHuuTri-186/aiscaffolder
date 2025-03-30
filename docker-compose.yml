@@ -1,17 +1,14 @@
-services:
-  mongodb:
-    image: mongo:latest
-    container_name: mongodb
-    restart: always
-    ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password
-      MONGO_INITDB_DATABASE: ai_product_db
-    volumes:
-      - mongodb_data:/data/db
+version: '3.8'
 
-volumes:
-  mongodb_data:
-    driver: local
+services:
+  aiscaffolder:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+    volumes:
+      - ./output:/app/output:rw
+    user: "1000:1000"
+    restart: unless-stopped 

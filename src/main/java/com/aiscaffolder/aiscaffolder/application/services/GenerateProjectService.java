@@ -18,4 +18,6 @@ public interface GenerateProjectService {
     void generateRepositories(List<Entity> entities, Configuration configuration, String outputDir);
     void generateEntities(List<Entity> entities, Configuration configuration, List<Relationship> relationships, String outputDir);
     void generateConfigurations(Configuration configuration, String outputDir);
+    void writeFile(String outputDir, String relativePath, String content) throws Exception;
+    String renderTemplate(String templateName, Object application);
 }

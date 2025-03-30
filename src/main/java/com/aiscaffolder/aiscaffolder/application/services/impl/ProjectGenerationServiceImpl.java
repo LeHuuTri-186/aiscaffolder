@@ -69,7 +69,8 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
         zipProjectService.zipProject(outputDir, outputDir + "/" + application.getConfig().getArtifact() + ".zip");
     }
 
-    private String renderTemplate(String templateName, Object application) {
+    @Override
+    public String renderTemplate(String templateName, Object application) {
         try {
             // Ensure the resolved template name ends with ".mustache"
             String resolvedTemplateName = templateName.endsWith(".mustache") ? templateName : templateName + ".mustache";
@@ -88,12 +89,12 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
         return Character.toUpperCase(str.charAt(0)) + str.substring(1);
     }
 
-    private void writeFile(String outputDir, String relativePath, String fileContent) throws Exception {
+    @Override
+    public void writeFile(String outputDir, String relativePath, String content) throws Exception {
         Path filePath = Path.of(outputDir, relativePath);
         Files.createDirectories(filePath.getParent());
-        Files.writeString(filePath, fileContent);
+        Files.writeString(filePath, content);
     }
-
 
     @Override
     public void generateProject() {
