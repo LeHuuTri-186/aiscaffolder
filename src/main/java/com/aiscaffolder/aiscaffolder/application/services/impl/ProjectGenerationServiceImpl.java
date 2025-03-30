@@ -66,7 +66,7 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
 
         log.info(outputDir);
 
-        zipProjectService.zipProject(outputDir, outputDir + "/" + application.getConfig().getArtifact() + ".zip");
+        zipProjectService.zipProject(outputDir,  "../../" + application.getConfig().getArtifact() + ".zip");
     }
 
     @Override

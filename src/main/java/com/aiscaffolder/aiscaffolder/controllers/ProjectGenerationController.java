@@ -42,27 +42,29 @@ public class ProjectGenerationController {
         validateEntities(applicationDto.getEntities());
         validateJavaVersion(applicationDto.getConfig().getJavaVersion());
 
+        // Generate timestamped unique directory
         String timestamp = String.valueOf(System.currentTimeMillis());
         String uuid = UUID.randomUUID().toString().substring(0, 8);
-        String outputDirectory = "output/project-" + timestamp + "-" + uuid;
+        String projectName = applicationDto.getConfig().getArtifact();
 
-        Files.createDirectories(Paths.get(outputDirectory));
+        Path outputDirectory = Paths.get("output", "project-" + timestamp + "-" + uuid, projectName);
+        Files.createDirectories(outputDirectory); // Ensure directories exist
 
-        projectGenerationUseCase.execute(mapper.mapFrom(applicationDto), outputDirectory);
-        String zipFileName = applicationDto.getConfig().getArtifact() + ".zip";
+        // Generate project files
+        projectGenerationUseCase.execute(mapper.mapFrom(applicationDto), outputDirectory.toString());
 
-        File zipFile = new File(zipFileName);
-        Path zipFilePath = Paths.get(outputDirectory, zipFileName);
+        // Define ZIP file path inside the same project directory
+        Path zipFilePath = outputDirectory.getParent().resolve(projectName + ".zip");
 
-        Resource resource = new FileSystemResource(zipFilePath.toString());
-
+        // Check if ZIP file exists
+        Resource resource = new FileSystemResource(zipFilePath.toFile());
         if (!resource.exists()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
         // Set response headers
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + zipFile.getName());
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + zipFilePath.getFileName());
         headers.add(HttpHeaders.CONTENT_TYPE, "application/zip");
 
         return ResponseEntity.ok()

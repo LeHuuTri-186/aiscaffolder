@@ -3,12 +3,40 @@ version: '3.8'
 services:
   aiscaffolder:
     build: .
+    container_name: aiscaffolder
     ports:
       - "8080:8080"
     environment:
+      - MONGO_USER=${MONGO_USER}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_DB=${MONGO_DB}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
     volumes:
-      - ./output:/app/output:rw
+      - output_volume:/app/output:rw
     user: "1000:1000"
-    restart: unless-stopped 
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DB}
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-seed.js:/docker-entrypoint-initdb.d/mongo-seed.js:ro
+
+volumes:
+  output_volume:
+    name: aiscaffolder_output
+    driver: local
+  mongodb_data:
+    name: mongodb_data
+    driver: local
