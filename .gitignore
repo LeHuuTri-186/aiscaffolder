@@ -34,3 +34,4 @@ build/
 output
 
 .env
+.DS_Store

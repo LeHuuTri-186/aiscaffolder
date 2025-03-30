@@ -1,17 +1,17 @@
-package {{config.packageName}};
+package {{packageName}};
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-{{#config.caching}}
+{{#caching}}
 import org.springframework.cache.annotation.EnableCaching;
-{{/config.caching}}
+{{/caching}}
 
 @SpringBootApplication
-{{#config.caching}}
+{{#caching}}
 @EnableCaching
-{{/config.caching}}
-public class {{config.name}}Application {
+{{/caching}}
+public class {{name}}Application {
     public static void main(String[] args) {
-        SpringApplication.run({{config.name}}Application.class, args);
+        SpringApplication.run({{name}}Application.class, args);
     }
 }
