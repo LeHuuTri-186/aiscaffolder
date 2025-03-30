@@ -62,6 +62,7 @@ public class ProjectGenerationUseCase {
         // Generate Gradle Wrapper
         try {
             if (application.getConfig().getBuildTool() == BuildTool.GRADLE) {
+                log.info("Added gradle to the project");
                 gradleWrapperServiceImpl.generateGradleSettings(outputDirectory, application.getConfig().getArtifact());
                 gradleWrapperServiceImpl.generateWrapper(outputDirectory);
                 updatedFiles.put("build.gradle", "build.gradle.mustache");

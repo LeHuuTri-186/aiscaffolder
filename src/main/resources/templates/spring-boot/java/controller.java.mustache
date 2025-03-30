@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import {{packageName}}.services.{{entity}}Service;
 import {{packageName}}.domain.{{entity}};
@@ -43,11 +44,23 @@ public class {{entity}}Controller {
             return ResponseEntity.ok(saved{{entity}}.get());
         }
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND) .body(null);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
     }
 
     @DeleteMapping("/{id}")
     public void delete{{entity}}(@PathVariable {{idFieldType}} id) {
         {{entityLower}}Service.delete{{entity}}(id);
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<{{entity}}> update{{entity}}Partial(
+        @PathVariable {{idFieldType}} id,
+        @RequestBody Map<String, Object> updates) {
+        try {
+            {{entity}} updated{{entity}} = {{entityLower}}Service.update{{entity}}Partial(id, updates);
+            return ResponseEntity.ok(updated{{entity}});
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
     }
 }

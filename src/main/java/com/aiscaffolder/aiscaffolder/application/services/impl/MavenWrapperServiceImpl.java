@@ -40,4 +40,3 @@ public class MavenWrapperServiceImpl implements WrapperService {
         }
     }
 }
-
