@@ -12,6 +12,7 @@ services:
       - MONGO_DB=${MONGO_DB}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - GEMINI_MODEL_URL=${GEMINI_MODEL_URL}
     volumes:
       - output_volume:/app/output:rw
     user: "1000:1000"

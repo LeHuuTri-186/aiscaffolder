@@ -21,3 +21,4 @@ slack:
 api-keys:
   gemini:
     key: ${GEMINI_API_KEY}
+    url: ${GEMINI_MODEL_URL}

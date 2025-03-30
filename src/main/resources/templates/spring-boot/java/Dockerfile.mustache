@@ -1,0 +1,19 @@
+ARG JDK_VERSION={{javaVersion}}
+
+FROM eclipse-temurin:${JDK_VERSION}-jdk as builder
+
+WORKDIR /app
+
+COPY . .
+
+RUN ./mvnw clean package -DskipTests
+
+FROM eclipse-temurin:${JDK_VERSION}-jdk as runtime
+
+WORKDIR /app
+
+COPY --from=builder /app/target/*.jar app.jar
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

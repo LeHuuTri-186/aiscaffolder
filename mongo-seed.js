@@ -71,34 +71,10 @@ db.product_configs.insertMany([
              ],
              "dependencies": [
                  {
-                     "groupId": "org.springframework.boot",
-                     "artifactId": "spring-boot-starter-data-jpa",
-                     "version": "3.4.2",
-                     "scope": "compile"
-                 },
-                 {
-                     "groupId": "org.springframework.boot",
-                     "artifactId": "spring-boot-starter-web",
-                     "version": "3.4.2",
-                     "scope": "compile"
-                 },
-                 {
                      "groupId": "org.postgresql",
                      "artifactId": "postgresql",
                      "version": "42.6.0",
                      "scope": "runtime"
-                 },
-                 {
-                     "groupId": "com.h2database",
-                     "artifactId": "h2",
-                     "version": "2.2.224",
-                     "scope": "runtime"
-                 },
-                 {
-                     "groupId": "org.springframework.boot",
-                     "artifactId": "spring-boot-starter-test",
-                     "version": "3.4.2",
-                     "scope": "test"
                  }
              ]
         }
@@ -108,7 +84,7 @@ db.product_configs.insertMany([
     2. Generate the entities based on the analysis result.
     3. Generate the possible relationships based on the analysis result.
     4. Generate the suitable configurations based on the analysis result.
-    5. Generate the dependencies based on the analysis result.
+    5. Generate allowed dependencies while omitting the restricted ones.
     6. Return the generated project JSON and remarks on the key selling point of the project.`,
         "context": `Generate a JSON configuration file that defines a Spring Boot project setup. The JSON should adhere to the provided schema with clearly defined sections for application configuration, entities, relationships, and dependencies. Follow the specific instructions for field types and relationships as outlined below.
 
@@ -158,7 +134,18 @@ db.product_configs.insertMany([
 
     is Bidirectional (boolean): The source entity should be a bidirectional relationship.
 
-    Only one side of the relationship should be defined, and whether the relationship is bidirectional or unidirectional should be handle by the flag isBidirectional.`,
+    Only one side of the relationship should be defined, and whether the relationship is bidirectional or unidirectional should be handle by the flag isBidirectional.
+    
+    Dependencies for the following artifactId: { lombok, spring-boot-starter-security, jjwt, spring-boot-starter-web, spring-security-web, spring-boot-starter-data-jpa, spring-boot-starter-cache, ehcache, spring-boot-starter-web, spring-boot-starter-tomcat, spring-boot-starter-test } should not be included.
+    Any other dependencies that are not listed but required should be included:
+    Example:
+    {
+         "groupId": "org.postgresql",
+         "artifactId": "postgresql",
+         "version": "42.6.0",
+         "scope": "runtime"
+    }
+    `,
         "version": 1
     },
 ]);

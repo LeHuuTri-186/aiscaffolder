@@ -46,14 +46,17 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
             String relativeFilePath = resolvePlaceholders(fileEntry.getKey(), application.getConfig());
             String templateName = fileEntry.getValue();
 
-            log.debug(templateName);
-
             String fileContent = renderTemplate(TEMPLATE_PATH + templateName, application);
 
             writeFile(outputDir, relativeFilePath, fileContent);
         }
 
+        generateCachingFiles(application.getEntities(), application.getConfig(), outputDir);
+
+        generateApplicationFile(application.getConfig(), outputDir);
+
         generateDockerCompose(application.getConfig(), outputDir);
+
         generateRepositories(application.getEntities(), application.getConfig(), outputDir);
 
         generateConfigurations(application.getConfig(), outputDir);
@@ -63,8 +66,6 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
         generateServices(application.getEntities(), application.getConfig(), outputDir);
 
         generateControllers(application.getEntities(), application.getConfig(), outputDir);
-
-        log.info(outputDir);
 
         zipProjectService.zipProject(outputDir,  "../../" + application.getConfig().getArtifact() + ".zip");
     }
@@ -102,6 +103,23 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
     }
 
     @Override
+    public void generateApplicationFile(Configuration config, String outputDir) {
+        Map<String, Object> configMap = new HashMap<>();
+
+        configMap.put("caching", config.getCaching() != CachingSolution.NO);
+        configMap.put("packageName", config.getPackageName());
+        configMap.put("name", config.getName());
+
+        String entityFilePath = "src/main/java/" + config.getPackageName().replace('.', '/') + "/" + config.getName() + "Application.java";
+
+        try {
+            writeFile(outputDir, entityFilePath, renderTemplate(TEMPLATE_PATH + "MainApplication.java", configMap));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public void generateWrapper() {
 
     }
@@ -116,7 +134,22 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
         Map<String, Object> configMap = new HashMap<>();
         configMap.put("dbConfig", true);
         configMap.put("name", config.getName());
+        configMap.put("nameLower", config.getName().toLowerCase());
+        configMap.put("port", config.getServerPort());
+        configMap.put("javaVersion", config.getJavaVersion());
 
+        handleDatabaseType(config, configMap);
+
+        try {
+            writeFile(outputDir, "docker-compose.yml", renderTemplate(TEMPLATE_PATH + "docker-compose.yml", configMap));
+            writeFile(outputDir, "Dockerfile", renderTemplate(TEMPLATE_PATH + "Dockerfile", configMap));
+            writeFile(outputDir, ".dockerignore", renderTemplate(TEMPLATE_PATH + ".dockerignore", configMap));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void handleDatabaseType(Configuration config, Map<String, Object> configMap) {
         if (config.getDatabaseType() == DatabaseType.SQL) {
             configMap.put("isDatasource", true);
             configMap.put("isMySql", config.getProdDatabaseType().equalsIgnoreCase("mysql"));
@@ -125,19 +158,13 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
             configMap.put("isMssql", config.getProdDatabaseType().equalsIgnoreCase("mssql"));
             configMap.put("isMariaDb", config.getProdDatabaseType().equalsIgnoreCase("mariadb"));
         } else {
-            configMap.put("isData", false);
-        }
-
-        try {
-            writeFile(outputDir, "docker-compose.yml", renderTemplate(TEMPLATE_PATH + "docker-compose.yml", configMap));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            configMap.put("isData", true);
         }
     }
 
     @Override
     public void generateCachingFiles(List<Entity> entities, Configuration configuration, String outputDir) {
-        if (CachingSolution.NO == configuration.getCaching()) {
+        if (CachingSolution.EHCACHE != configuration.getCaching()) {
             return;
         }
 
@@ -148,7 +175,7 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
 
         String configContent = renderTemplate(TEMPLATE_PATH + "ehcache.xml.mustache", cachingContext);
 
-        String entityFilePath = "src/main/resources" + "ehcache.xml.java";
+        String entityFilePath = "src/main/resources/ehcache.xml";
 
         try {
             writeFile(outputDir, entityFilePath, configContent);
@@ -159,20 +186,23 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
 
     @Override
     public void generateDependencies(List<Dependency> dependencies, Configuration configuration, String outputDir) {
+        Map<String, Object> dependenciesContext = new HashMap<>();
+        dependenciesContext.put("dependencies", dependencies);
+
 
     }
 
     @Override
     public void generateControllers(List<Entity> entities, Configuration configuration, String outputDir) {
         for (Entity entity : entities) {
-            Map<String, Object> entityRepositoryContext = new HashMap<>();
+            Map<String, Object> controllerContext = new HashMap<>();
 
-            entityRepositoryContext.put("entity", entity.getEntityName());
-            entityRepositoryContext.put("entityLower", entity.getEntityName().toLowerCase());
-            entityRepositoryContext.put("packageName", configuration.getPackageName());
-            entityRepositoryContext.put("idFieldType", entity.getIdFieldType());
+            controllerContext.put("entity", entity.getEntityName());
+            controllerContext.put("entityLower", entity.getEntityName().toLowerCase());
+            controllerContext.put("packageName", configuration.getPackageName());
+            controllerContext.put("idFieldType", entity.getIdFieldType());
 
-            String content = renderTemplate(TEMPLATE_PATH + "controller.java.mustache", entityRepositoryContext);
+            String content = renderTemplate(TEMPLATE_PATH + "controller.java.mustache", controllerContext);
 
             String entityFilePath = "src/main/java/" + configuration.getPackageName().replace('.', '/')
                     + "/controllers/" + entity.getEntityName() + "Controller.java";
@@ -187,16 +217,16 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
     @Override
     public void generateServices(List<Entity> entities, Configuration configuration, String outputDir) {
         for (Entity entity : entities) {
-            Map<String, Object> entityRepositoryContext = new HashMap<>();
+            Map<String, Object> serviceContext = new HashMap<>();
 
-            entityRepositoryContext.put("entity", entity.getEntityName());
-            entityRepositoryContext.put("entityLower", entity.getEntityName().toLowerCase());
-            entityRepositoryContext.put("packageName", configuration.getPackageName());
-            entityRepositoryContext.put("idFieldType", entity.getIdFieldType());
+            serviceContext.put("entity", entity.getEntityName());
+            serviceContext.put("entityLower", entity.getEntityName().toLowerCase());
+            serviceContext.put("packageName", configuration.getPackageName());
+            serviceContext.put("idFieldType", entity.getIdFieldType());
 
-            entityRepositoryContext.put(configuration.getCaching().getValue(), true);
+            serviceContext.put(configuration.getCaching().getValue(), true);
 
-            String content = renderTemplate(TEMPLATE_PATH + "service.java.mustache", entityRepositoryContext);
+            String content = renderTemplate(TEMPLATE_PATH + "service.java.mustache", serviceContext);
 
             String entityFilePath = "src/main/java/" + configuration.getPackageName().replace('.', '/')
                     + "/services/" + entity.getEntityName() + "Service.java";
@@ -261,14 +291,16 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
     private void handleEntitiesRelationships(List<Relationship> relationships, Entity entity, List<Map<String, Object>> relationshipContexts) {
         relationships.forEach(relationship -> {
             Map<String, Object> relationshipContext = new HashMap<>();
-            if (relationship.getType() == RelationshipType.ONE_TO_ONE) {
-                relationshipContext.put("isOneToOne", true);
-            } else if (relationship.getType() == RelationshipType.MANY_TO_ONE) {
-                relationshipContext.put("isManyToOne", true);
-            } else if (relationship.getType() == RelationshipType.ONE_TO_MANY) {
-                relationshipContext.put("isOneToMany", true);
-            } else if (relationship.getType() == RelationshipType.MANY_TO_MANY) {
-                relationshipContext.put("isManyToMany", true);
+            Map<RelationshipType, String> relationshipMapping = Map.of(
+                RelationshipType.ONE_TO_ONE, "isOneToOne",
+                RelationshipType.MANY_TO_ONE, "isManyToOne",
+                RelationshipType.ONE_TO_MANY, "isOneToMany",
+                RelationshipType.MANY_TO_MANY, "isManyToMany"
+            );
+
+            String contextKey = relationshipMapping.get(relationship.getType());
+            if (contextKey != null) {
+                relationshipContext.put(contextKey, true);
             }
 
             relationshipContext.put("targetClass", relationship.getToEntity());
@@ -353,16 +385,7 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
         if (config.getDatabaseType() != DatabaseType.NO) {
             configMap.put("dbConfig", true);
 
-            if (config.getDatabaseType() == DatabaseType.SQL) {
-                configMap.put("isDatasource", true);
-                configMap.put("isMySql", config.getProdDatabaseType().equalsIgnoreCase("mysql"));
-                configMap.put("isOracle", config.getProdDatabaseType().equalsIgnoreCase("oracle"));
-                configMap.put("isPostgres", config.getProdDatabaseType().equalsIgnoreCase("postgresql"));
-                configMap.put("isMssql", config.getProdDatabaseType().equalsIgnoreCase("mssql"));
-                configMap.put("isMariaDb", config.getProdDatabaseType().equalsIgnoreCase("mariadb"));
-            } else {
-                configMap.put("isData", false);
-            }
+            handleDatabaseType(config, configMap);
 
             if (!config.getProdDatabaseType().equalsIgnoreCase("no")) {
                 prodProfile.put("isDatasource", true);

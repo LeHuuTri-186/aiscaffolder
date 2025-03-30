@@ -17,7 +17,8 @@ import java.util.Map;
 public class ApiGenerationService {
     @Value("${api-keys.gemini.key}")
     private String geminiKey;
-    private final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=";
+    @Value("${api-keys.gemini.url}")
+    private String GEMINI_API_URL;
     private final RestTemplate restTemplate = new RestTemplate();
     @Autowired
     private PromptInstructionService promptInstructionService;
@@ -43,8 +44,6 @@ public class ApiGenerationService {
         requestBody.put("generationConfig", responseMimeType);
 
         Map<String, Object> response = restTemplate.postForObject(GEMINI_API_URL + geminiKey, requestBody, Map.class);
-
-        log.info(response.toString());
 
         return response != null ? response : new HashMap<>();
     }

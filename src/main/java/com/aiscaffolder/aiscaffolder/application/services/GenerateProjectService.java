@@ -9,6 +9,7 @@ import java.util.List;
 
 public interface GenerateProjectService {
     void generateProject();
+    void generateApplicationFile(Configuration configuration, String outputDir);
     void generateWrapper();
     void generateDockerCompose(Configuration configuration, String outputDir);
     void generateCachingFiles(List<Entity> entities, Configuration configuration, String outputDir);
