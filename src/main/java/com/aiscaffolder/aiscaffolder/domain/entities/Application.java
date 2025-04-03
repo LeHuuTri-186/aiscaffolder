@@ -14,5 +14,4 @@ public class Application {
     private Configuration config;
     private List<Entity> entities;
     private List<Relationship> relationships;
-    private List<Dependency> dependencies;
 }

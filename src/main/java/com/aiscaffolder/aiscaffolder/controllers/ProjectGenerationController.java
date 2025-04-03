@@ -12,14 +12,17 @@ import com.aiscaffolder.aiscaffolder.mappers.Mapper;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -38,11 +41,10 @@ public class ProjectGenerationController {
 
     @PostMapping("/generate")
     @CrossOrigin(origins = "http://localhost:5173")
-    public ResponseEntity<Resource> generateProject(@Valid @RequestBody ApplicationDto applicationDto) throws IOException {
+    public ResponseEntity<InputStreamResource> generateProject(@Valid @RequestBody ApplicationDto applicationDto) throws IOException {
         validateEntities(applicationDto.getEntities());
         validateJavaVersion(applicationDto.getConfig().getJavaVersion());
 
-        // Generate timestamped unique directory
         String timestamp = String.valueOf(System.currentTimeMillis());
         String uuid = UUID.randomUUID().toString().substring(0, 8);
         String projectName = applicationDto.getConfig().getArtifact();
@@ -50,26 +52,26 @@ public class ProjectGenerationController {
         Path outputDirectory = Paths.get("output", "project-" + timestamp + "-" + uuid, projectName);
         Files.createDirectories(outputDirectory); // Ensure directories exist
 
-        // Generate project files
         projectGenerationUseCase.execute(mapper.mapFrom(applicationDto), outputDirectory.toString());
 
-        // Define ZIP file path inside the same project directory
         Path zipFilePath = outputDirectory.getParent().resolve(projectName + ".zip");
 
-        // Check if ZIP file exists
         Resource resource = new FileSystemResource(zipFilePath.toFile());
         if (!resource.exists()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
-        // Set response headers
+        InputStream inputStream = new BufferedInputStream(Files.newInputStream(zipFilePath));
+        InputStreamResource zipResource = new InputStreamResource(inputStream);
+
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + zipFilePath.getFileName());
         headers.add(HttpHeaders.CONTENT_TYPE, "application/zip");
 
         return ResponseEntity.ok()
                 .headers(headers)
-                .body(resource);
+                .contentLength(Files.size(zipFilePath))
+                .body(zipResource);
     }
 
     private void validateJavaVersion(int javaVersion) {

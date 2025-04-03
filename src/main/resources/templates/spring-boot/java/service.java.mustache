@@ -4,18 +4,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ReflectionUtils;
 import java.lang.reflect.Field;
-{{#ehcache}}
+{{#caching}}
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Caching;
-{{/ehcache}}
-{{#redis}}
-import org.springframework.cache.annotation.EnableCaching;
-{{/redis}}
-{{#hazelcast}}
-import org.springframework.cache.annotation.EnableCaching;
-{{/hazelcast}}
+{{/caching}}
 
 import java.util.List;
 import java.util.Map;
@@ -29,42 +23,38 @@ public class {{entity}}Service {
     @Autowired
     private {{entity}}Repository {{entityLower}}Repository;
 
-    {{#ehcache}}
-    @Cacheable(value = "{{entityLower}}Cache", key = "#user.id")
-    @CacheEvict(value = "{{entityLower}}Cache", key = "allUsers")
-    {{/ehcache}}{{#redis}}{{/redis}}{{#hazelcast}}{{/hazelcast}}
+    {{#caching}}
+    @Cacheable(value = "{{entityLower}}Cache", key = "#{{entityLower}}.id")
+    @CacheEvict(value = "{{entityLower}}sCache"){{/caching}}
     public {{entity}} save{{entity}}({{entity}} {{entityLower}}) {
         return {{entityLower}}Repository.save({{entityLower}});
     }
 
-    {{#ehcache}}
-    @Cacheable(value = "{{entityLower}}Cache", key = "all{{entity}}s")
-    {{/ehcache}}
+    {{#caching}}
+    @Cacheable(value = "{{entityLower}}sCache"){{/caching}}
     public List<{{entity}}> getAll{{entity}}s() {
         return {{entityLower}}Repository.findAll();
     }
 
-    {{#ehcache}}
+    {{#caching}}
     @Cacheable(value = "{{entityLower}}Cache", key = "#id")
-    {{/ehcache}}
+    {{/caching}}
     public Optional<{{entity}}> get{{entity}}ById({{idFieldType}} id) {
         return {{entityLower}}Repository.findById(id);
     }
 
-    {{#ehcache}}
+    {{#caching}}
     @Caching(evict = {
         @CacheEvict(value = "{{entityLower}}Cache", key = "#id"),
-        @CacheEvict(value = "{{entityLower}}Cache", key = "'all{{entity}}s'")
-    })
-    {{/ehcache}}
+        @CacheEvict(value = "{{entityLower}}sCache")
+    }){{/caching}}
     public void delete{{entity}}({{idFieldType}} id) {
         {{entityLower}}Repository.deleteById(id);
     }
 
-    {{#ehcache}}
+    {{#caching}}
     @CachePut(value = "{{entityLower}}Cache", key = "#id")
-    @CacheEvict(value = "{{entityLower}}Cache", key = "'all{{entity}}s'")
-    {{/ehcache}}
+    @CacheEvict(value = "{{entityLower}}sCache"){{/caching}}
     public {{entity}} update{{entity}}Partial({{idFieldType}} id, Map<String, Object> updates) {
         {{entity}} {{entityLower}} = {{entityLower}}Repository.findById(id)
             .orElseThrow(() -> new RuntimeException());
