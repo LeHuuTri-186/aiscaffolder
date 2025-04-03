@@ -2,14 +2,8 @@ package {{packageName}};
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-{{#caching}}
-import org.springframework.cache.annotation.EnableCaching;
-{{/caching}}
 
 @SpringBootApplication
-{{#caching}}
-@EnableCaching
-{{/caching}}
 public class {{name}}Application {
     public static void main(String[] args) {
         SpringApplication.run({{name}}Application.class, args);

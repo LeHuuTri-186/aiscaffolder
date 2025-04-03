@@ -17,5 +17,4 @@ public class ApplicationDto {
     private ConfigurationDto config;
     private List<EntityDto> entities;
     private List<RelationshipDto> relationships;
-    private List<DependencyDto> dependencies;
 }

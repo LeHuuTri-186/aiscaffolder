@@ -1,19 +1,27 @@
-<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="http://www.ehcache.org/ehcache.xsd">
-    <diskStore path="java.io.tmpdir"/>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.ehcache.org/v3"
+        xsi:schemaLocation="http://www.ehcache.org/v3 http://www.ehcache.org/schema/ehcache-core-3.0.xsd">
 
-    <defaultCache
-            maxEntriesLocalHeap="1000"
-            eternal="false"
-            timeToIdleSeconds="300"
-            timeToLiveSeconds="600"
-            overflowToDisk="true"/>
+    <persistence directory="java.io.tmpdir"/>
 
-    {{#entities}}
-    <cache name="{{entityName}}Cache"
-           maxEntriesLocalHeap="500"
-           timeToIdleSeconds="300"
-           timeToLiveSeconds="600"
-           overflowToDisk="true"/>
-    {{/entities}}
-</ehcache>
+{{#entities}}
+    <cache alias="{{entityName}}Cache">
+        <expiry>
+            <ttl unit="seconds">3600</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">1000</heap>
+            <offheap unit="MB">100</offheap>
+        </resources>
+    </cache>
+    <cache alias="{{entityName}}sCache">
+        <expiry>
+            <ttl unit="seconds">3600</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">1000</heap>
+            <offheap unit="MB">100</offheap>
+        </resources>
+    </cache>
+{{/entities}}
+</config>

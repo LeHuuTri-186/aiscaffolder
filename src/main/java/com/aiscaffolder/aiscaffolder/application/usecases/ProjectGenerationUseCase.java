@@ -51,7 +51,6 @@ public class ProjectGenerationUseCase {
         try {
             if (application.getConfig().getBuildTool() == BuildTool.MAVEN) {
                 mavenWrapperServiceImpl.generateWrapper(outputDirectory);
-                updatedFiles.put("pom.xml", "pom.xml.mustache");
             }
         } catch (IOException e) {
             throw new RuntimeException("Failed to generate Maven Wrapper", e);

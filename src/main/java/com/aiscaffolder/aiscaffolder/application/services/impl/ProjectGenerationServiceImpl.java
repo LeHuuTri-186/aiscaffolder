@@ -3,6 +3,7 @@ package com.aiscaffolder.aiscaffolder.application.services.impl;
 import com.aiscaffolder.aiscaffolder.application.services.GenerateProjectService;
 import com.aiscaffolder.aiscaffolder.application.services.ZipProjectService;
 import com.aiscaffolder.aiscaffolder.domain.entities.*;
+import com.aiscaffolder.aiscaffolder.domain.enums.BuildTool;
 import com.aiscaffolder.aiscaffolder.domain.enums.CachingSolution;
 import com.aiscaffolder.aiscaffolder.domain.enums.DatabaseType;
 import com.aiscaffolder.aiscaffolder.domain.enums.RelationshipType;
@@ -67,6 +68,8 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
 
         generateControllers(application.getEntities(), application.getConfig(), outputDir);
 
+        generateDependencies(application.getConfig(), outputDir);
+
         zipProjectService.zipProject(outputDir,  "../../" + application.getConfig().getArtifact() + ".zip");
     }
 
@@ -88,6 +91,10 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
 
     private String capitalize(String str) {
         return Character.toUpperCase(str.charAt(0)) + str.substring(1);
+    }
+
+    private String uncapitalize(String str) {
+        return Character.toLowerCase(str.charAt(0)) + str.substring(1);
     }
 
     @Override
@@ -133,10 +140,15 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
 
         Map<String, Object> configMap = new HashMap<>();
         configMap.put("dbConfig", true);
+        configMap.put("depends", true);
         configMap.put("name", config.getName());
         configMap.put("nameLower", config.getName().toLowerCase());
         configMap.put("port", config.getServerPort());
         configMap.put("javaVersion", config.getJavaVersion());
+        boolean caching = config.getCaching() != CachingSolution.NO;
+
+        configMap.put("caching", caching);
+        configMap.put(config.getCaching().getValue(), caching);
 
         handleDatabaseType(config, configMap);
 
@@ -157,25 +169,48 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
             configMap.put("isPostgres", config.getProdDatabaseType().equalsIgnoreCase("postgresql"));
             configMap.put("isMssql", config.getProdDatabaseType().equalsIgnoreCase("mssql"));
             configMap.put("isMariaDb", config.getProdDatabaseType().equalsIgnoreCase("mariadb"));
-        } else {
+        }
+
+        if (config.getCaching() == CachingSolution.REDIS) {
             configMap.put("isData", true);
         }
     }
 
     @Override
     public void generateCachingFiles(List<Entity> entities, Configuration configuration, String outputDir) {
-        if (CachingSolution.EHCACHE != configuration.getCaching()) {
+        if (CachingSolution.NO == configuration.getCaching()) {
             return;
         }
 
         Map<String, Object> cachingContext = new HashMap<>();
 
-        cachingContext.put("entities", entities);
+        List<Map<String, String>> entitiesContext = new ArrayList<>();
+
+        entities.forEach(entity -> {
+            Map<String, String> entityContext = new HashMap<>();
+            entityContext.put("entityName", uncapitalize(entity.getEntityName()));
+            entitiesContext.add(entityContext);
+        });
+
+        cachingContext.put("entities", entitiesContext);
         cachingContext.put(configuration.getCaching().getValue(), true);
+        cachingContext.put("packageName", configuration.getPackageName());
 
-        String configContent = renderTemplate(TEMPLATE_PATH + "ehcache.xml.mustache", cachingContext);
+        if (CachingSolution.EHCACHE == configuration.getCaching()) {
+            String configContent = renderTemplate(TEMPLATE_PATH + "ehcache.xml.mustache", cachingContext);
 
-        String entityFilePath = "src/main/resources/ehcache.xml";
+            String entityFilePath = "src/main/resources/ehcache.xml";
+
+            try {
+                writeFile(outputDir, entityFilePath, configContent);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        String configContent = renderTemplate(TEMPLATE_PATH + "cacheConfig.java.mustache", cachingContext);
+
+        String entityFilePath = "src/main/java/" + configuration.getPackageName().replace('.', '/') + "/config/CacheConfig.java";
 
         try {
             writeFile(outputDir, entityFilePath, configContent);
@@ -185,11 +220,45 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
     }
 
     @Override
-    public void generateDependencies(List<Dependency> dependencies, Configuration configuration, String outputDir) {
-        Map<String, Object> dependenciesContext = new HashMap<>();
-        dependenciesContext.put("dependencies", dependencies);
+    public void generateDependencies(Configuration configuration, String outputDir) {
+        Map<String, Object> dependencies = new HashMap<>();
 
+        dependencies.put("springBootVersion", configuration.getSpringBootVersion());
+        dependencies.put("javaVersion", configuration.getJavaVersion());
+        dependencies.put("group", configuration.getGroup());
+        dependencies.put("artifact", configuration.getArtifact());
 
+        boolean caching = configuration.getCaching() != CachingSolution.NO;
+
+        dependencies.put("caching", caching);
+        dependencies.put(configuration.getCaching().getValue(), caching);
+
+        dependencies.put("hibernateEnabled", configuration.getHibernateEnabled());
+        dependencies.put("lombokEnabled", configuration.getLombokEnabled());
+
+        dependencies.put("jwtAuthEnabled", !configuration.getAuthenticationType().equalsIgnoreCase("no"));
+
+        handleDatabaseType(configuration, dependencies);
+
+        if (configuration.getBuildTool() == BuildTool.MAVEN) {
+            dependencies.put("description", configuration.getDescription());
+            dependencies.put("name", configuration.getName());
+            String content = renderTemplate(TEMPLATE_PATH + "pom.xml.mustache", dependencies);
+
+            try {
+                writeFile(outputDir, "pom.xml", content);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            String content = renderTemplate(TEMPLATE_PATH + "build.gradle.mustache",  dependencies);
+
+            try {
+                writeFile(outputDir, "build.gradle", content);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     @Override
@@ -198,7 +267,7 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
             Map<String, Object> controllerContext = new HashMap<>();
 
             controllerContext.put("entity", entity.getEntityName());
-            controllerContext.put("entityLower", entity.getEntityName().toLowerCase());
+            controllerContext.put("entityLower", uncapitalize(entity.getEntityName()));
             controllerContext.put("packageName", configuration.getPackageName());
             controllerContext.put("idFieldType", entity.getIdFieldType());
 
@@ -220,11 +289,11 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
             Map<String, Object> serviceContext = new HashMap<>();
 
             serviceContext.put("entity", entity.getEntityName());
-            serviceContext.put("entityLower", entity.getEntityName().toLowerCase());
+            serviceContext.put("entityLower", uncapitalize(entity.getEntityName()));
             serviceContext.put("packageName", configuration.getPackageName());
             serviceContext.put("idFieldType", entity.getIdFieldType());
 
-            serviceContext.put(configuration.getCaching().getValue(), true);
+            serviceContext.put("caching", configuration.getCaching() != CachingSolution.NO);
 
             String content = renderTemplate(TEMPLATE_PATH + "service.java.mustache", serviceContext);
 
@@ -381,6 +450,13 @@ public class ProjectGenerationServiceImpl implements GenerateProjectService {
         Map<String, Object> configMap = new HashMap<>();
         Map<String, Object> devProfile = new HashMap<>();
         Map<String, Object> prodProfile = new HashMap<>();
+
+        boolean caching = config.getCaching() != CachingSolution.NO;
+
+        configMap.put("caching", caching);
+        configMap.put("nameLower", config.getName().toLowerCase());
+        prodProfile.put("nameLower", config.getName().toLowerCase());
+        configMap.put(config.getCaching().getValue(), caching);
 
         if (config.getDatabaseType() != DatabaseType.NO) {
             configMap.put("dbConfig", true);

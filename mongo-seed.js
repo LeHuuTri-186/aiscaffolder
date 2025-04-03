@@ -1,6 +1,17 @@
-db = db.getSiblingDB(process.env.MONGO_DB || 'aiscaffolder'); // Database name
+print('[INFO] Starting MongoDB Seeding Process...');
 
-db.createCollection("product_configs");
+db = db.getSiblingDB(process.env.MONGO_DB || 'aiscaffolder'); // Select database
+print(`[INFO] Using database: ${db.getName()}`);
+
+if (!db.getCollectionNames().includes("product_configs")) {
+    print("[INFO] Creating collection: product_configs");
+    db.createCollection("product_configs");
+    print("[INFO] Collection 'product_configs' created successfully.");
+} else {
+    print("[INFO] Collection 'product_configs' already exists. Skipping creation.");
+}
+
+print("[INFO] MongoDB Seeding Process Completed.");
 
 db.product_configs.insertMany([
     {
@@ -144,8 +155,7 @@ db.product_configs.insertMany([
          "artifactId": "postgresql",
          "version": "42.6.0",
          "scope": "runtime"
-    }
-    `,
+    }`,
         "version": 1
     },
 ]);

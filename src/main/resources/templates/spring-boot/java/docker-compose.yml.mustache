@@ -3,14 +3,29 @@ services:
         build: .
         container_name: {{nameLower}}
         ports:
-            - "{{port}}:8080"
+            - "{{port}}:{{port}}"
         volumes:
             - app_data:/app
-    {{#dbConfig}}
+    {{#depends}}
         depends_on:
-            - {{#isMysql}}mysql{{/isMysql}}{{#isMssql}}mssql{{/isMssql}}{{#isMariaDb}}mariadb{{/isMariaDb}}{{#isPostgres}}postgres{{/isPostgres}}{{#isOracle}}oracle{{/isOracle}}
-    {{/dbConfig}}
+            {{#dbConfig}}-{{/dbConfig}} {{#isMysql}}mysql{{/isMysql}}{{#isMssql}}mssql{{/isMssql}}{{#isMariaDb}}mariadb{{/isMariaDb}}{{#isPostgres}}postgres{{/isPostgres}}{{#isOracle}}oracle{{/isOracle}}
+            {{#redis}}- redis{{/redis}}{{#hazelcast}}- hazelcast{{/hazelcast}}
+    {{/depends}}
         restart: unless-stopped
+        environment:
+            - SPRING_PROFILES_ACTIVE=default
+    {{#redis}}
+            - SPRING_DATA_REDIS_HOST=redis_container
+            - SPRING_DATA_REDIS_PORT=6379
+            - SPRING_DATA_REDIS_TIMEOUT=60000
+            - SPRING_DATA_REDIS_LETTUCE_POOL_MAX_ACTIVE=10
+            - SPRING_DATA_REDIS_LETTUCE_POOL_MAX_IDLE=5
+            - SPRING_DATA_REDIS_LETTUCE_POOL_MIN_IDLE=2
+            - SPRING_DATA_REDIS_LETTUCE_POOL_MAX_WAIT=2000ms
+    {{/redis}}
+{{#dbConfig}}
+            - SPRING_DATASOURCE_URL={{#isMysql}}jdbc:mysql://mysql_container:3306/{{nameLower}}{{/isMysql}}{{#isMssql}}jdbc:sqlserver://mssql_container:1433;databaseName={{nameLower}}{{/isMssql}}{{#isMariaDb}}jdbc:mariadb://mariadb_container:3306/{{nameLower}}{{/isMariaDb}}{{#isPostgres}}jdbc:postgresql://postgres_container:5432/{{nameLower}}{{/isPostgres}}{{#isOracle}}jdbc:oracle:thin:@oracle_container:1521:{{nameLower}}{{/isOracle}}
+{{/dbConfig}}
 {{#isMysql}}
     mysql:
         image: mysql:8.0
@@ -19,7 +34,7 @@ services:
         environment:
             MYSQL_ROOT_USER: root
             MYSQL_ROOT_PASSWORD: root
-            MYSQL_DATABASE: {{name}}
+            MYSQL_DATABASE: {{nameLower}}
         ports:
             - "3306:3306"
         volumes:
@@ -34,7 +49,7 @@ services:
         environment:
             SA_PASSWORD: "password"
             ACCEPT_EULA: "Y"
-            MSSQL_DATABASE: {{name}}
+            MSSQL_DATABASE: {{nameLower}}
         restart: always
 {{/isMssql}}
 {{#isMariaDb}}
@@ -45,7 +60,7 @@ services:
             - "3306:3306"
         environment:
             MARIADB_ROOT_PASSWORD: root
-            MARIADB_DATABASE: {{name}}
+            MARIADB_DATABASE: {{nameLower}}
             MARIADB_USER: root
             MARIADB_PASSWORD: root
         volumes:
@@ -61,7 +76,7 @@ services:
         environment:
             POSTGRES_USER: postgres
             POSTGRES_PASSWORD: password
-            POSTGRES_DB: {{name}}
+            POSTGRES_DB: {{nameLower}}
         volumes:
             - postgres_data:/var/lib/postgresql/data
         restart: always
@@ -74,11 +89,25 @@ services:
             - "1521:1521"
         environment:
             ORACLE_PWD: password
-            ORACLE_DATABASE: {{name}}
+            ORACLE_DATABASE: {{nameLower}}
         volumes:
             - oracle_data:/opt/oracle/oradata
         restart: always
 {{/isOracle}}
+{{#caching}}
+    {{#redis}}
+    redis:
+        container_name: redis_container
+        image: redis:7.2.0
+        restart: always
+        ports:
+            - "6379:6379"
+        environment:
+            - ALLOW_EMPTY_PASSWORD=yes
+        volumes:
+            - redis_data:/data
+    {{/redis}}
+{{/caching}}
 volumes:
     app_data:
 {{#isMysql}}
@@ -93,3 +122,7 @@ volumes:
 {{#isOracle}}
     oracle_data:
 {{/isOracle}}
+{{#redis}}
+    redis_data:
+        driver: local
+{{/redis}}
