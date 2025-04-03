@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>{{config.springBootVersion}}</version>
+        <version>{{springBootVersion}}</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>{{config.group}}</groupId>
-    <artifactId>{{config.artifact}}</artifactId>
+    <groupId>{{group}}</groupId>
+    <artifactId>{{artifact}}</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>{{config.name}}</name>
-    <description>{{config.description}}</description>
+    <name>{{name}}</name>
+    <description>{{description}}</description>
     <url/>
     <licenses>
         <license/>
@@ -27,17 +27,17 @@
         <url/>
     </scm>
     <properties>
-        <java.version>{{config.javaVersion}}</java.version>
+        <java.version>{{javaVersion}}</java.version>
     </properties>
     <dependencies>
-        {{#config.lombokEnabled}}
+        {{#lombokEnabled}}
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.18.30</version>
             <scope>provided</scope>
         </dependency>
-        {{/config.lombokEnabled}}
+        {{/lombokEnabled}}
         {{#jwtAuthEnabled}}
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -45,8 +45,22 @@
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt</artifactId>
-            <version>0.11.5</version> <!-- Use the latest version -->
+            <artifactId>jjwt-jackson</artifactId>
+            <version>0.12.6</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>0.12.6</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.12.6</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -65,16 +79,40 @@
             <scope>compile</scope>
         </dependency>
         {{/hibernateEnabled}}
-        {{#config.caching}}
+    {{#caching}}
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-cache</artifactId>
         </dependency>
         <dependency>
+            <groupId>javax.cache</groupId>
+            <artifactId>cache-api</artifactId>
+        </dependency>
+    {{#ehcache}}
+        <dependency>
             <groupId>org.ehcache</groupId>
             <artifactId>ehcache</artifactId>
+            <classifier>jakarta</classifier>
         </dependency>
-        {{/config.caching}}
+    {{/ehcache}}
+    {{#redis}}
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson-spring-boot-starter</artifactId>
+            <version>3.23.2</version>
+        </dependency>
+    {{/redis}}
+    {{#hazelcast}}
+        <dependency>
+            <groupId>com.hazelcast</groupId>
+            <artifactId>hazelcast-spring</artifactId>
+        </dependency>
+    {{/hazelcast}}
+    {{/caching}}
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -89,18 +127,46 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-    {{#dependencies}}
+    {{#isPostgres}}
         <dependency>
-            <groupId>{{groupId}}</groupId>
-            <artifactId>{{artifactId}}</artifactId>
-            {{#version}}
-                <version>{{version}}</version>
-            {{/version}}
-            {{#scope}}
-                <scope>{{scope}}</scope>
-            {{/scope}}
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
         </dependency>
-    {{/dependencies}}
+    {{/isPostgres}}
+    {{#isMySql}}
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+    {{/isMySql}}
+    {{#isMariadb}}
+        <dependency>
+            <groupId>org.mariadb.jdbc</groupId>
+            <artifactId>mariadb-java-client</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+    {{/isMariadb}}
+    {{#isMssql}}
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+    {{/isMssql}}
+    {{#isOracle}}
+        <dependency>
+            <groupId>com.oracle.database.jdbc</groupId>
+            <artifactId>ojdbc11</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+    {{/isOracle}}
+    <dependency>
+        <groupId>com.h2database</groupId>
+        <artifactId>h2</artifactId>
+        <scope>runtime</scope>
+    </dependency>
     </dependencies>
     <build>
         <plugins>

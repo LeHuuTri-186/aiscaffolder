@@ -1,16 +1,16 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '{{config.springBootVersion}}'
+    id 'org.springframework.boot' version '{{springBootVersion}}'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'jar'
 }
 
-group = '{{config.group}}'
+group = '{{group}}'
 version = '0.0.1-SNAPSHOT'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of({{config.javaVersion}})
+        languageVersion = JavaLanguageVersion.of({{javaVersion}})
     }
 }
 
@@ -21,24 +21,50 @@ repositories {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-{{#config.lombokEnabled}}
+{{#lombokEnabled}}
     implementation 'org.projectlombok:lombok:1.18.30'
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
-{{/config.lombokEnabled}}
-{{#config.jwtAuthEnabled}}
+{{/lombokEnabled}}
+{{#jwtAuthEnabled}}
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'io.jsonwebtoken:jjwt:0.11.5'
     implementation 'org.springframework.security:spring-security-web'
-{{/config.jwtAuthEnabled}}
-{{#config.hibernateEnabled}}
+{{/jwtAuthEnabled}}
+{{#hibernateEnabled}}
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-{{/config.hibernateEnabled}}
+{{/hibernateEnabled}}
+{{#isPostgresql}}
+    runtimeOnly 'org.postgresql:postgresql'
+{{/isPostgresql}}
+{{#isMySql}}
+    runtimeOnly 'mysql:mysql-connector-java'
+{{/isMySql}}
+{{#isMariadb}}
+    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+{{/isMariadb}}
+{{#isMssql}}
+    runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'
+{{/isMssql}}
+{{#isOracle}}
+    runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
+{{/isOracle}}
     implementation 'org.springframework.boot:spring-boot-starter-tomcat'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-{{#dependencies}}
-    implementation '{{groupId}}:{{artifactId}}{{#version}}:{{version}}{{/version}}'
-{{/dependencies}}
+    implementation 'com.h2database:h2'
+{{#caching}}
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'javax.cache:cache-api'
+    {{#ehcache}}
+    implementation 'org.ehcache:ehcache'
+    {{/ehcache}}
+    {{#redis}}
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    {{/redis}}
+    {{#hazelcast}}
+    implementation 'com.hazelcast:hazelcast-spring'
+    {{/hazelcast}}
+{{/caching}}
 }
 
 tasks.named('test') {

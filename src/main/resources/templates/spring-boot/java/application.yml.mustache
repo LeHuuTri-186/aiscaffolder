@@ -1,8 +1,17 @@
 spring:
     profiles:
         active: dev
+{{#caching}}
+    cache:
+        type: {{#ehcache}}jcache{{/ehcache}}{{#redis}}redis{{/redis}}{{#hazelcast}}hazelcast{{/hazelcast}}
+    {{#ehcache}}
+        jcache:
+            config: classpath:ehcache.xml
+    {{/ehcache}}
+    {{/caching}}
 {{#name}}
-    application: {{name}}
+    application:
+        name: {{name}}
 {{/name}}
 {{#dbConfig}}
 {{#isDatasource}}
@@ -19,31 +28,31 @@ spring:
             maximum-pool-size: 10
             minimum-idle: 5
     {{#isMySql}}
-        url: jdbc:mysql://localhost:3306/{{name}}
+        url: jdbc:mysql://localhost:3306/{{nameLower}}
         username: root
         password: root
         driver-class-name: com.mysql.cj.jdbc.Driver
     {{/isMySql}}
     {{#isPostgres}}
-        url: jdbc:postgresql://localhost:5432/{{name}}
+        url: jdbc:postgresql://localhost:5432/{{nameLower}}
         username: postgres
         password: password
         driver-class-name: org.postgresql.Driver
     {{/isPostgres}}
     {{#isMariaDb}}
-        url: jdbc:mariadb://localhost:3306/{{name}}
+        url: jdbc:mariadb://localhost:3306/{{nameLower}}
         username: root
         password: root
         driver-class-name: org.mariadb.jdbc.Driver
     {{/isMariaDb}}
     {{#isMssql}}
-        url: jdbc:sqlserver://localhost:1433;databaseName={{name}}
+        url: jdbc:sqlserver://localhost:1433;databaseName={{nameLower}}
         username: sa
         password: password
         driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
     {{/isMssql}}
     {{#isOracle}}
-        url: jdbc:oracle:thin:@localhost:1521:{{name}}
+        url: jdbc:oracle:thin:@localhost:1521:{{nameLower}}
         username: system
         password: password
         driver-class-name: oracle.jdbc.OracleDriver
@@ -51,6 +60,18 @@ spring:
 {{/isDatasource}}
 {{#isData}}
     data:
+    {{#redis}}
+        redis:
+            host: localhost
+            port: 6379
+            timeout: 60000
+            lettuce:
+                pool:
+                    max-active: 10
+                    max-idle: 5
+                    min-idle: 2
+                    max-wait: 2000ms
+    {{/redis}}
     {{#isCouchBase}}
     {{/isCouchBase}}
     {{#isCassandra}}
